@@ -23,13 +23,19 @@ import android.view.ViewAnimationUtils
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.Activity
+import android.os.Build
 import android.support.design.widget.Snackbar
 import android.view.inputmethod.InputMethodManager
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
+import android.widget.Toast
 import com.pavelsikun.runinbackgroundpermissionsetter.AppListAdapter.SortMethod
-
+import java.util.*
 class MainActivity : AppCompatActivity() {
 
-    var appopstype = "RUN_IN_BACKGROUND"
+    val  B_SDK = Build.VERSION.SDK_INT
+    var appopstype = "GPS"
 
     val adapter by lazy {
         AppListAdapter { (_, appName, appTime, appPackage, isEnabled) ->
@@ -50,7 +56,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        toolbar.title = appopstype
+        val spinner = findViewById<Spinner>(R.id.spinner)
+        toolbar.title = B_SDK.toString() + appopstype
         if (intent != null) {
 
         }
@@ -64,7 +71,31 @@ class MainActivity : AppCompatActivity() {
             loadApps()
         }
 
-        loadApps()
+        if (spinner != null) {
+            val adapterq = ArrayAdapter(this, android.R.layout.simple_spinner_item, sdkArray())
+            adapterq.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinner.adapter = adapterq
+            spinner.onItemSelectedListener = object :
+                    AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>,
+                                            view: View, position: Int, id: Long) {
+                    Snackbar.make(coordinator,
+                            parent.getItemAtPosition(position).toString(), Snackbar.LENGTH_LONG).show()
+                    Toast.makeText(this@MainActivity, "OnItemSelectedListener : " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show()
+                    appopstype = parent.getItemAtPosition(position).toString()
+                    toolbar.title = B_SDK.toString() + appopstype
+                    adapter.clear()
+                    loadApps()
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>) {
+                    // write code to perform some action
+                }
+
+            }
+        }
+
+        //loadApps()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -90,7 +121,7 @@ class MainActivity : AppCompatActivity() {
                 .setTopTitle(getString(R.string.loading_dialog_title))
                 .setTopTitleColor(getColor(android.R.color.white))
                 .setIcon(R.drawable.clock_alert)
-                .setMessage(getString(R.string.loading_dialog_message)).show()
+                .setMessage(appopstype).show()
 
         async(UI) {
             val intent = Intent(Intent.ACTION_MAIN, null)
@@ -178,11 +209,28 @@ class MainActivity : AppCompatActivity() {
                 .setButtonsColorRes(R.color.primary)
                 .setIcon(R.drawable.information)
                 .setMessage(R.string.info_dialog_message)
-                .setNegativeButton(getString(R.string.button_close_dialog), null)
+                .setNegativeButton("!RESET ALL appOps!") {
+                    Snackbar.make(coordinator, resetRunInBackgroundPermission("").get(), Snackbar.LENGTH_LONG).show()
+                    adapter.clear()
+                    loadApps()
+                }
                 .setPositiveButton(getString(R.string.button_open_github)) {
                     openGithub()
                 }
                 .show()
+    }
+
+    fun sdkArray(): List<String?> {
+        val sdkarray = arrayListOf<String>()
+
+        val list = resources.getStringArray(R.array.permary)
+        for (n in list.indices) {
+            if (list[n].substring(0,2).toInt() <= B_SDK) {
+                sdkarray.add(list[n].toString().substring(5))
+            }
+        }
+
+        return sdkarray//.sorted()
     }
 
 }

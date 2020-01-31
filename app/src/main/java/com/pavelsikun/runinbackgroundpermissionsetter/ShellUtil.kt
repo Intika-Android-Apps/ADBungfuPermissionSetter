@@ -36,4 +36,14 @@ fun setRunInBackgroundPermission(pkg: String, appops: String, setEnabled: Boolea
     }
 
     return future
+
+}
+
+fun resetRunInBackgroundPermission(pkg: String): CompletableFuture<String> {
+    val future = CompletableFuture<String>()
+    shell.addCommand("cmd appops reset $pkg", 1) { _, _, output: MutableList<String> ->
+        val outputString = output.joinToString()
+        future.complete(outputString)
+    }
+    return future
 }
