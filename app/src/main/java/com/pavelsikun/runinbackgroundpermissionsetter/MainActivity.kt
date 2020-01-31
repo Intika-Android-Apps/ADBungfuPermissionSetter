@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun openGithub() {
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/MrBIMC/RunInBackgroundPermissionSetter")))
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://bitbucket.org/oF2pks/adbungfupermissionsetter/commits/")))
     }
 
     fun showSearchBar() {

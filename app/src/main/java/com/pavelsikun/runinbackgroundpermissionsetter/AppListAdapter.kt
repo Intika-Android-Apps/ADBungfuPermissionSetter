@@ -81,7 +81,7 @@ class AppListAdapter(val itemClick: (AppItem) -> Unit) : RecyclerView.Adapter<Ap
 
         when (method) {
             SortMethod.NAME -> {
-                allItems.sortBy { it.appName }
+                allItems.sortBy { it.appName.toLowerCase() }
                 setItemsToDisplay(allItems)
             }
             SortMethod.PACKAGE -> {
