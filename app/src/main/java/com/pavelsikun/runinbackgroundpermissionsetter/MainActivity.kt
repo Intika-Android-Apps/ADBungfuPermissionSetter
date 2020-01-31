@@ -29,12 +29,14 @@ import com.pavelsikun.runinbackgroundpermissionsetter.AppListAdapter.SortMethod
 
 class MainActivity : AppCompatActivity() {
 
+    var appopstype = "RUN_IN_BACKGROUND"
+
     val adapter by lazy {
-        AppListAdapter { (_, appName, appPackage, isEnabled) ->
-            setRunInBackgroundPermission(appPackage, isEnabled) { isSuccess ->
+        AppListAdapter { (_, appName, appTime, appPackage, isEnabled) ->
+            setRunInBackgroundPermission(appPackage, appopstype, isEnabled) { isSuccess ->
                 val status = if (isEnabled) getString(R.string.message_allow) else getString(R.string.message_ignore)
-                val msgSuccess = "$appName RUN_IN_BACKGROUND ${getString(R.string.message_was_set_to)} '$status'"
-                val msgError = "${getString(R.string.message_there_was_error)} $appName RUN_IN_BACKGROUND ${getString(R.string.message_to)} '$status'"
+                val msgSuccess = "$appName $appopstype ${getString(R.string.message_was_set_to)} '$status'"
+                val msgError = "${getString(R.string.message_there_was_error)} $appName $appopstype ${getString(R.string.message_to)} '$status'"
 
                 runOnUiThread {
                     val msg = if (isSuccess) msgSuccess else msgError
@@ -48,6 +50,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+        toolbar.title = appopstype
+        if (intent != null) {
+
+        }
+
 
         recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter = adapter
@@ -92,10 +99,16 @@ class MainActivity : AppCompatActivity() {
 
             apps.map {
                 val data = bg {
+                    val ztest = checkRunInBackgroundPermission(it.activityInfo.packageName , appopstype).get()
+                    var fuel = ""
+                    if (ztest.contains("time")) {
+                        fuel = ztest.substring(ztest.indexOf("time")+5)
+                    }
                     AppItem(it.loadIcon(packageManager),
                             it.loadLabel(packageManager).toString(),
+                            fuel,
                             it.activityInfo.packageName,
-                            checkRunInBackgroundPermission(it.activityInfo.packageName).get())
+                            ztest.contains("allow"))
                 }
 
                 adapter.addItem(data.await())

@@ -1,5 +1,6 @@
 package com.pavelsikun.runinbackgroundpermissionsetter
 
+import android.graphics.Color
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -33,7 +34,11 @@ class AppListAdapter(val itemClick: (AppItem) -> Unit) : RecyclerView.Adapter<Ap
 
             appIcon.setImageDrawable(appItem.appIcon)
             appName.text = appItem.appName
+            appTime.text = appItem.appTime
             appPackage.text = appItem.appPackage
+            if (appTime.length() == 0) {
+                itemView.setBackgroundColor(Color.LTGRAY)
+            } else itemView.setBackgroundColor(Color.WHITE)
 
             permissionSwitch.isChecked = appItem.isEnabled
             setStatus(appItem.isEnabled)
