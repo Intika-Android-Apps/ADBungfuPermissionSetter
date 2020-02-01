@@ -31,11 +31,11 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
 import com.pavelsikun.runinbackgroundpermissionsetter.AppListAdapter.SortMethod
-import java.util.*
 class MainActivity : AppCompatActivity() {
 
-    val  B_SDK = Build.VERSION.SDK_INT
-    var appopstype = "GPS"
+    val B_SDK = Build.VERSION.SDK_INT
+    var appopstype = "RUN_IN_BACKGROUND"
+    var sigma = 0
 
     val adapter by lazy {
         AppListAdapter { (_, appName, appTime, appPackage, isEnabled) ->
@@ -52,12 +52,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
         val spinner = findViewById<Spinner>(R.id.spinner)
-        toolbar.title = B_SDK.toString() + appopstype
+        toolbar.title = "_"
         if (intent != null) {
 
         }
@@ -75,6 +79,8 @@ class MainActivity : AppCompatActivity() {
             val adapterq = ArrayAdapter(this, android.R.layout.simple_spinner_item, sdkArray())
             adapterq.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spinner.adapter = adapterq
+
+            spinner.setSelection(adapterq.getPosition(appopstype))
             spinner.onItemSelectedListener = object :
                     AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>,
@@ -83,7 +89,7 @@ class MainActivity : AppCompatActivity() {
                             parent.getItemAtPosition(position).toString(), Snackbar.LENGTH_LONG).show()
                     Toast.makeText(this@MainActivity, "OnItemSelectedListener : " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show()
                     appopstype = parent.getItemAtPosition(position).toString()
-                    toolbar.title = B_SDK.toString() + appopstype
+                    toolbar.subtitle = "sdk" + B_SDK.toString() + ":" + appopstype
                     adapter.clear()
                     loadApps()
                 }
@@ -91,10 +97,8 @@ class MainActivity : AppCompatActivity() {
                 override fun onNothingSelected(parent: AdapterView<*>) {
                     // write code to perform some action
                 }
-
             }
         }
-
         //loadApps()
     }
 
@@ -119,7 +123,7 @@ class MainActivity : AppCompatActivity() {
         val ad = LovelyProgressDialog(this)
                 .setTopColorRes(R.color.accent)
                 .setTopTitle(getString(R.string.loading_dialog_title))
-                .setTopTitleColor(getColor(android.R.color.white))
+                //.setTopTitleColor(getColor(android.R.color.white))
                 .setIcon(R.drawable.clock_alert)
                 .setMessage(appopstype).show()
 
@@ -134,6 +138,7 @@ class MainActivity : AppCompatActivity() {
                     var fuel = ""
                     if (ztest.contains("time")) {
                         fuel = ztest.substring(ztest.indexOf("time")+5)
+                        sigma++
                     }
                     AppItem(it.loadIcon(packageManager),
                             it.loadLabel(packageManager).toString(),
@@ -149,6 +154,8 @@ class MainActivity : AppCompatActivity() {
                     ad.dismiss()
                 }
             }
+            toolbar.subtitle = "sdk" + B_SDK.toString() + ":" + sigma.toString()
+            sigma = 0
         }
     }
 
@@ -205,7 +212,7 @@ class MainActivity : AppCompatActivity() {
         LovelyStandardDialog(this)
                 .setTopColorRes(R.color.accent)
                 .setTopTitle(getString(R.string.button_open_information))
-                .setTopTitleColor(getColor(android.R.color.white))
+                //.setTopTitleColor(getColor(android.R.color.white))
                 .setButtonsColorRes(R.color.primary)
                 .setIcon(R.drawable.information)
                 .setMessage(R.string.info_dialog_message)
