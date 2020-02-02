@@ -46,6 +46,17 @@ Contributors
 Licence is GPLv3
 ----
 
+Icons adaptive [ADB wireless] 
+----
+License is (GPLv3 compatible) CC_BY: https://www.gnu.org/licenses/license-list.html#ccby
+
+source http://www.softicons.com/android-icons/mad-ginger-icon-pack-by-madeliniz/adb-wireless-icon
+
+ref. [mAd GiNGeR Icon Pack] modified with foreground layer addition: text["__#"] color[C86400]
+
+author Madeliniz http://madeliniz.deviantart.com/
+
+
 
 
 

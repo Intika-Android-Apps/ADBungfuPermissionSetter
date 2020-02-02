@@ -34,7 +34,7 @@ import com.pavelsikun.runinbackgroundpermissionsetter.AppListAdapter.SortMethod
 class MainActivity : AppCompatActivity() {
 
     val B_SDK = Build.VERSION.SDK_INT
-    var appopstype = "RUN_IN_BACKGROUND"
+    var appopstype = "GPS"
     var sigma = 0
 
     val adapter by lazy {
@@ -63,7 +63,8 @@ class MainActivity : AppCompatActivity() {
         val spinner = findViewById<Spinner>(R.id.spinner)
         toolbar.title = "_"
         if (intent != null) {
-
+            if (intent.getStringExtra("extraID") != null)
+                appopstype = intent.getStringExtra("extraID")
         }
 
 
@@ -154,7 +155,7 @@ class MainActivity : AppCompatActivity() {
                     ad.dismiss()
                 }
             }
-            toolbar.subtitle = "sdk" + B_SDK.toString() + ":" + sigma.toString()
+            toolbar.subtitle = " | \u2211 = " + sigma.toString()
             sigma = 0
         }
     }
