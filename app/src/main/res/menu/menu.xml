@@ -22,6 +22,9 @@
             <item
                 android:id="@+id/action_sort_disabled_first"
                 android:title="@string/action_sort_disabled_first" />
+            <item
+                android:id="@+id/action_system"
+                android:title="@string/s1" />
         </menu>
     </item>
 

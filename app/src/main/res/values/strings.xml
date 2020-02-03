@@ -25,7 +25,7 @@
     <string name="action_sort_disabled_first">by restricted first</string>
     <string name="search_hint">Enter app name or package…</string>
 
-    <string name="s1">TOAST_WINDOW</string>
+    <string name="s1">+/- ☢DARK/System  \u21af</string>
     <string name="s2">RUN_IN_BACKGROUND</string>
 
 </resources>

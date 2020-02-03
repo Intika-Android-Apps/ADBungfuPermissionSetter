@@ -3,10 +3,12 @@
 <resources>
   <string-array name="permary">
     <item>19,0,GPS</item>
+      <item>19,8,VIBRATE</item>
     <item>19,0,POST_NOTIFICATION</item>
     <item>19,0,NEIGHBORING_CELLS</item>
     <item>19,0,WRITE_SMS</item>
     <item>19,0,WRITE_ICC_SMS</item>
+      <item>19,8,SYSTEM_ALERT_WINDOW</item>
     <item>19,0,PLAY_AUDIO</item>
     <item>19,0,READ_CLIPBOARD</item>
     <item>19,0,WRITE_CLIPBOARD</item>
@@ -19,6 +21,7 @@
     <item>19,0,AUDIO_ALARM_VOLUME</item>
     <item>19,0,AUDIO_NOTIFICATION_VOLUME</item>
     <item>19,0,AUDIO_BLUETOOTH_VOLUME</item>
+      <item>19,8,WAKE_LOCK</item>
     <item>19,0,MONITOR_LOCATION</item>
     <item>19,0,MONITOR_HIGH_POWER_LOCATION</item>
     <item>21,0,MUTE_MICROPHONE</item>
@@ -28,14 +31,19 @@
     <item>23,0,WRITE_WALLPAPER</item>
     <item>23,0,ASSIST_STRUCTURE</item>
     <item>23,0,ASSIST_SCREENSHOT</item>
+      <item>23,8,BODY_SENSORS</item>
     <item>23,0,MOCK_LOCATION</item>
     <item>23,0,TURN_ON_SCREEN</item>
     <item>24,0,RUN_IN_BACKGROUND</item>
     <item>26,0,AUDIO_ACCESSIBILITY_VOLUME</item>
     <item>26,0,PICTURE_IN_PICTURE</item>
+      <item>26,8,INSTANT_APP_START_FOREGROUND</item>
     <item>28,0,RUN_ANY_IN_BACKGROUND</item>
     <item>28,0,MANAGE_IPSEC_TUNNELS</item>
+      <item>28,8,START_FOREGROUND</item>
     <item>28,0,BLUETOOTH_SCAN</item>
+      <item>29,8,USE_BIOMETRIC</item>
+      <item>29,8,ACTIVITY_RECOGNITION</item>
 	<item>29,0,READ_MEDIA_AUDIO"</item>
 	<item>29,0,WRITE_MEDIA_AUDIO"</item>
 	<item>29,0,READ_MEDIA_VIDEO"</item>

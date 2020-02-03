@@ -34,8 +34,9 @@ import com.pavelsikun.runinbackgroundpermissionsetter.AppListAdapter.SortMethod
 class MainActivity : AppCompatActivity() {
 
     val B_SDK = Build.VERSION.SDK_INT
-    var appopstype = "GPS"
+    var appopstype = "WAKE_LOCK"
     var sigma = 0
+    var full = false
 
     val adapter by lazy {
         AppListAdapter { (_, appName, appTime, appPackage, isEnabled) ->
@@ -65,6 +66,9 @@ class MainActivity : AppCompatActivity() {
         if (intent != null) {
             if (intent.getStringExtra("extraID") != null)
                 appopstype = intent.getStringExtra("extraID")
+            else if (intent.action == Intent.ACTION_VIEW)
+                full =true
+
         }
 
 
@@ -73,7 +77,7 @@ class MainActivity : AppCompatActivity() {
 
         swipeRefreshLayout.setOnRefreshListener {
             adapter.clear()
-            loadApps()
+            loadApps(full)
         }
 
         if (spinner != null) {
@@ -90,9 +94,9 @@ class MainActivity : AppCompatActivity() {
                             parent.getItemAtPosition(position).toString(), Snackbar.LENGTH_LONG).show()
                     Toast.makeText(this@MainActivity, "OnItemSelectedListener : " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show()
                     appopstype = parent.getItemAtPosition(position).toString()
-                    toolbar.subtitle = "sdk" + B_SDK.toString() + ":" + appopstype
+                    toolbar.subtitle = fully(full) + "sdk" + B_SDK.toString() + ":" + appopstype
                     adapter.clear()
-                    loadApps()
+                    loadApps(full)
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>) {
@@ -100,7 +104,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        //loadApps()
+        //loadApps(full)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -115,11 +119,17 @@ class MainActivity : AppCompatActivity() {
             R.id.action_sort_name -> adapter.sort(SortMethod.NAME)
             R.id.action_sort_package -> adapter.sort(SortMethod.PACKAGE)
             R.id.action_sort_disabled_first -> adapter.sort(SortMethod.STATE)
+            R.id.action_system -> {
+                //toolbar.subtitle = fully(full) + "sdk" + B_SDK.toString() + ":" + appopstype
+                full = !full
+                adapter.clear()
+                loadApps(full)
+            }
         }
         return super.onOptionsItemSelected(item)
     }
 
-    fun loadApps() {
+    fun loadApps(boolean: Boolean) {
         swipeRefreshLayout.isRefreshing = false
         val ad = LovelyProgressDialog(this)
                 .setTopColorRes(R.color.accent)
@@ -129,35 +139,67 @@ class MainActivity : AppCompatActivity() {
                 .setMessage(appopstype).show()
 
         async(UI) {
-            val intent = Intent(Intent.ACTION_MAIN, null)
-            intent.addCategory(Intent.CATEGORY_LAUNCHER)
-            val apps = packageManager.queryIntentActivities(intent, PackageManager.GET_META_DATA)
-
-            apps.map {
-                val data = bg {
-                    val ztest = checkRunInBackgroundPermission(it.activityInfo.packageName , appopstype).get()
-                    var fuel = ""
-                    if (ztest.contains("time")) {
-                        fuel = ztest.substring(ztest.indexOf("time")+5)
-                        sigma++
+            if (boolean){
+                val appsInfos = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+                appsInfos.map {
+                    val data = bg {
+                        val ztest = checkRunInBackgroundPermission(it.packageName , appopstype).get()
+                        var fuel = ""
+                        if (ztest.contains("time")) {
+                            fuel = ztest.substring(ztest.indexOf("time")+5)
+                            sigma++
+                        }
+                        AppItem(it.loadIcon(packageManager),
+                                it.loadLabel(packageManager).toString(),
+                                fuel,
+                                it.packageName,
+                                ztest.contains("allow"))
                     }
-                    AppItem(it.loadIcon(packageManager),
-                            it.loadLabel(packageManager).toString(),
-                            fuel,
-                            it.activityInfo.packageName,
-                            ztest.contains("allow"))
+
+                    adapter.addItem(data.await())
+
+                    if (adapter.itemCount == appsInfos.size) {
+                        adapter.sort()
+                        ad.dismiss()
+                    }
+
                 }
+            } else {
+                val intent = Intent(Intent.ACTION_MAIN, null)
+                intent.addCategory(Intent.CATEGORY_LAUNCHER)
+                val apps = packageManager.queryIntentActivities(intent, PackageManager.GET_META_DATA)
 
-                adapter.addItem(data.await())
+                apps.map {
+                    val data = bg {
+                        val ztest = checkRunInBackgroundPermission(it.activityInfo.packageName , appopstype).get()
+                        var fuel = ""
+                        if (ztest.contains("time")) {
+                            fuel = ztest.substring(ztest.indexOf("time")+5)
+                            sigma++
+                        }
+                        AppItem(it.loadIcon(packageManager),
+                                it.loadLabel(packageManager).toString(),
+                                fuel,
+                                it.activityInfo.packageName,
+                                ztest.contains("allow"))
+                    }
 
-                if (adapter.itemCount == apps.size) {
-                    adapter.sort()
-                    ad.dismiss()
+                    adapter.addItem(data.await())
+
+                    if (adapter.itemCount == apps.size) {
+                        adapter.sort()
+                        ad.dismiss()
+                    }
                 }
             }
-            toolbar.subtitle = " | \u2211 = " + sigma.toString()
+            toolbar.subtitle = fully(full) + " | \u2211 = " + sigma.toString()
             sigma = 0
         }
+    }
+
+    fun fully(boolean: Boolean): String {
+        if (boolean) return "☢"
+        else return ""
     }
 
     fun openGithub() {
@@ -220,7 +262,7 @@ class MainActivity : AppCompatActivity() {
                 .setNegativeButton("!RESET ALL appOps!") {
                     Snackbar.make(coordinator, resetRunInBackgroundPermission("").get(), Snackbar.LENGTH_LONG).show()
                     adapter.clear()
-                    loadApps()
+                    loadApps(full)
                 }
                 .setPositiveButton(getString(R.string.button_open_github)) {
                     openGithub()
@@ -238,7 +280,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        return sdkarray//.sorted()
+        return sdkarray.sorted()
     }
 
 }
