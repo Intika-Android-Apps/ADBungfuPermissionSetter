@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
     val adapter by lazy {
         AppListAdapter { (_, appName, appTime, appPackage, isEnabled) ->
-            setRunInBackgroundPermission(appPackage, appopstype, isEnabled) { isSuccess ->
+            setAppOpsPermission(appPackage, appopstype, isEnabled) { isSuccess ->
                 val status = if (isEnabled) getString(R.string.message_allow) else getString(R.string.message_ignore)
                 val msgSuccess = "$appName $appopstype ${getString(R.string.message_was_set_to)} '$status'"
                 val msgError = "${getString(R.string.message_there_was_error)} $appName $appopstype ${getString(R.string.message_to)} '$status'"
@@ -143,7 +143,7 @@ class MainActivity : AppCompatActivity() {
                 val appsInfos = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
                 appsInfos.map {
                     val data = bg {
-                        val ztest = checkRunInBackgroundPermission(it.packageName , appopstype).get()
+                        val ztest = checkAppOpsPermission(it.packageName , appopstype).get()
                         var fuel = ""
                         if (ztest.contains("time")) {
                             fuel = ztest.substring(ztest.indexOf("time")+5)
@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
                                 it.loadLabel(packageManager).toString(),
                                 fuel,
                                 it.packageName,
-                                ztest.contains("allow"))
+                                ztest.contains("allow") || ztest.contains("default") )
                     }
 
                     adapter.addItem(data.await())
@@ -171,7 +171,7 @@ class MainActivity : AppCompatActivity() {
 
                 apps.map {
                     val data = bg {
-                        val ztest = checkRunInBackgroundPermission(it.activityInfo.packageName , appopstype).get()
+                        val ztest = checkAppOpsPermission(it.activityInfo.packageName , appopstype).get()
                         var fuel = ""
                         if (ztest.contains("time")) {
                             fuel = ztest.substring(ztest.indexOf("time")+5)
@@ -181,7 +181,7 @@ class MainActivity : AppCompatActivity() {
                                 it.loadLabel(packageManager).toString(),
                                 fuel,
                                 it.activityInfo.packageName,
-                                ztest.contains("allow"))
+                                ztest.contains("allow") || ztest.contains("default") )
                     }
 
                     adapter.addItem(data.await())
@@ -260,7 +260,7 @@ class MainActivity : AppCompatActivity() {
                 .setIcon(R.drawable.information)
                 .setMessage(R.string.info_dialog_message)
                 .setNegativeButton("!RESET ALL appOps!") {
-                    Snackbar.make(coordinator, resetRunInBackgroundPermission("").get(), Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(coordinator, resetAppOpsPermission("").get(), Snackbar.LENGTH_LONG).show()
                     adapter.clear()
                     loadApps(full)
                 }
