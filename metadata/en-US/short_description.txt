@@ -1,0 +1,1 @@
+superuser ADBcmd appOps restrictor ^4 root ed :# su Magisk (aosp/opPerms)
