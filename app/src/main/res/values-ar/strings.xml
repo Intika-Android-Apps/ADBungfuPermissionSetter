@@ -4,7 +4,7 @@
     <string name="loading_dialog_title">الرجاء الانتظار ....</string>
 
     <string name="button_close_dialog">اغلاق</string>
-    <string name="button_open_github">افتح github</string>
+    <string name="button_open_github">افتح GPLv3 Bitbucket</string>
     <string name="button_open_information">معلومات</string>
 
     <string name="message_there_was_error">خطأ في ضبط الاذن</string>

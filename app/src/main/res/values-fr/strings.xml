@@ -1,0 +1,19 @@
+
+<resources>
+    <string name="loading_dialog_message">Vérification du root, chargement de la liste des applications et recherche de leur état RUN_IN_BACKGROUND…</string>
+    <string name="loading_dialog_title">Chargement…</string>
+    <string name="button_close_dialog">Fermer la fenêtre</string>
+    <string name="button_open_github">Ouvrir GPLv3 Bitbucket</string>
+    <string name="button_open_information">Information</string>
+    <string name="message_there_was_error">Erreur de paramétrage</string>
+    <string name="message_to">sur</string>
+    <string name="message_was_set_to">Défini sur</string>
+    <string name="message_allow">Autoriser</string>
+    <string name="message_ignore">Restreindre</string>
+    <string name="action_search">Rechercher</string>
+    <string name="action_sort">Trier</string>
+    <string name="action_sort_name">par nom</string>
+    <string name="action_sort_package">par paquet</string>
+    <string name="action_sort_disabled_first">par restriction</string>
+    <string name="search_hint">Saisir le nom d\'une application ou d\'un paquet…</string>
+</resources>

@@ -3,7 +3,7 @@
     <string name="loading_dialog_title">Caricamento…</string>
 
     <string name="button_close_dialog">Chiudi finestra</string>
-    <string name="button_open_github">Apri GitHub</string>
+    <string name="button_open_github">Apri GPLv3 Bitbucket</string>
     <string name="button_open_information">Informazioni</string>
 
     <string name="message_there_was_error">C\'è stato un errore</string>

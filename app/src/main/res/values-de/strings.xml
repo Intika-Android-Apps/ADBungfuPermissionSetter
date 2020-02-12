@@ -4,7 +4,7 @@
     <string name="loading_dialog_title">Ladevorgang...</string>
 
     <string name="button_close_dialog">Schließen</string>
-    <string name="button_open_github">Github</string>
+    <string name="button_open_github">GPLv3 Bitbucket</string>
     <string name="button_open_information">Information</string>
 
     <string name="message_there_was_error">Ein Fehler ist aufgetreten</string>

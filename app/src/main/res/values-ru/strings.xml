@@ -4,7 +4,7 @@
     <string name="loading_dialog_title">Загрузка…</string>
 
     <string name="button_close_dialog">Закрыть диалог</string>
-    <string name="button_open_github">Открыть github</string>
+    <string name="button_open_github">Открыть GPLv3 Bitbucket</string>
     <string name="button_open_information">информация</string>
 
     <string name="message_there_was_error">Произошла ошибка установки</string>

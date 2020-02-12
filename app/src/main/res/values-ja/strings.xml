@@ -1,0 +1,26 @@
+<resources>
+
+    <string name="loading_dialog_message">root 状態を確認し、アプリのリストをロードし、RUN_IN_BACKGROUND 状態を取得しています…</string>
+    <string name="loading_dialog_title">ロード中…</string>
+
+    <string name="button_close_dialog">ダイアログを閉じる</string>
+    <string name="button_open_github">GPLv3 Bitbucket を開く</string>
+    <string name="button_open_information">情報</string>
+
+    <string name="message_there_was_error">設定にエラーがありました</string>
+    <string name="message_to">-></string>
+    <string name="message_was_set_to">セットしました</string>
+
+    <string name="message_allow">許可</string>
+    <string name="message_ignore">制限</string>
+
+
+    <string name="action_search">検索</string>
+
+    <string name="action_sort">ソート</string>
+    <string name="action_sort_name">名前順</string>
+    <string name="action_sort_package">パッケージ順</string>
+    <string name="action_sort_disabled_first">制限を先に</string>
+    <string name="search_hint">アプリ名またはパッケージを入力…</string>
+
+</resources>
