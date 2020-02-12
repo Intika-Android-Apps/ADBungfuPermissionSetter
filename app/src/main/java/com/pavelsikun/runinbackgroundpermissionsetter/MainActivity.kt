@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity() {
             spinner.onItemSelectedListener = object :
                     AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>,
-                                            view: View, position: Int, id: Long) {
+                                            view: View?, position: Int, id: Long) {
                     Snackbar.make(coordinator,
                             parent.getItemAtPosition(position).toString(), Snackbar.LENGTH_LONG).show()
                     Toast.makeText(this@MainActivity, "OnItemSelectedListener : " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show()
@@ -234,7 +234,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         buttonBack.setOnClickListener {
-            inputManager.hideSoftInputFromWindow(currentFocus.windowToken, 0)
+            val inputMethodManager = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            inputMethodManager.hideSoftInputFromWindow(View(this).windowToken, 0)
             exitAnim.start()
         }
 
