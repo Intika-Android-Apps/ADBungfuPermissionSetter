@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
                                 it.loadLabel(packageManager).toString(),
                                 fuel,
                                 it.packageName,
-                                ztest.contains("allow") || ztest.contains("default") )
+                                testB(ztest))
                     }
 
                     adapter.addItem(data.await())
@@ -181,7 +181,7 @@ class MainActivity : AppCompatActivity() {
                                 it.loadLabel(packageManager).toString(),
                                 fuel,
                                 it.activityInfo.packageName,
-                                ztest.contains("allow") || ztest.contains("default") )
+                                testB(ztest))
                     }
 
                     adapter.addItem(data.await())
@@ -195,6 +195,11 @@ class MainActivity : AppCompatActivity() {
             toolbar.subtitle = fully(full) + " | \u2211 = " + sigma.toString()
             sigma = 0
         }
+    }
+
+    fun testB(string: String): Boolean {
+        return string.contains("allow") || string.contains("default")  ||
+                !(string.contains("ignore") || string.contains("deny"))
     }
 
     fun fully(boolean: Boolean): String {
