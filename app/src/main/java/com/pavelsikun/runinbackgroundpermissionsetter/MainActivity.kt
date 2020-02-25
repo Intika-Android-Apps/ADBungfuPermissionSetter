@@ -23,6 +23,8 @@ import android.view.ViewAnimationUtils
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.Activity
+import android.app.usage.UsageStatsManager
+import android.content.Context
 import android.os.Build
 import android.support.design.widget.Snackbar
 import android.view.inputmethod.InputMethodManager
@@ -31,10 +33,11 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
 import com.pavelsikun.runinbackgroundpermissionsetter.AppListAdapter.SortMethod
-class MainActivity : AppCompatActivity() {
+const val freezer = "1ive + stand-by"
 
+class MainActivity : AppCompatActivity() {
     val B_SDK = Build.VERSION.SDK_INT
-    var appopstype = "WAKE_LOCK"
+    var appopstype = freezer
     var sigma = 0
     var full = false
 
@@ -143,11 +146,25 @@ class MainActivity : AppCompatActivity() {
                 val appsInfos = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
                 appsInfos.map {
                     val data = bg {
-                        val ztest = checkAppOpsPermission(it.packageName , appopstype).get()
+                        val ztest: String
                         var fuel = ""
-                        if (ztest.contains("time")) {
-                            fuel = ztest.substring(ztest.indexOf("time")+5)
-                            sigma++
+                        if (appopstype.equals(freezer)) {
+                            if (it.enabled) ztest = "allow"
+                            else ztest ="deny"
+                            if (Build.VERSION.SDK_INT >= 23) {
+                                val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+                                if (usm.isAppInactive(it.packageName)) fuel = ""
+                                else {
+                                    fuel ="Active"
+                                    sigma++
+                                }
+                            }
+                        } else {
+                            ztest = checkAppOpsPermission(it.packageName , appopstype).get()
+                            if (ztest.contains("time")) {
+                                fuel = ztest.substring(ztest.indexOf("time")+5)
+                                sigma++
+                            }
                         }
                         AppItem(it.loadIcon(packageManager),
                                 it.loadLabel(packageManager).toString(),
@@ -171,11 +188,24 @@ class MainActivity : AppCompatActivity() {
 
                 apps.map {
                     val data = bg {
-                        val ztest = checkAppOpsPermission(it.activityInfo.packageName , appopstype).get()
+                        val ztest: String
                         var fuel = ""
-                        if (ztest.contains("time")) {
-                            fuel = ztest.substring(ztest.indexOf("time")+5)
-                            sigma++
+                        if (appopstype.equals(freezer)) {
+                            ztest = "allow"
+                            if (Build.VERSION.SDK_INT >= 23) {
+                                val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+                                if (usm.isAppInactive(it.activityInfo.packageName)) fuel = ""
+                                else {
+                                    fuel ="Active"
+                                    sigma++
+                                }
+                            }
+                        } else {
+                            ztest = checkAppOpsPermission(it.activityInfo.packageName , appopstype).get()
+                            if (ztest.contains("time")) {
+                                fuel = ztest.substring(ztest.indexOf("time")+5)
+                                sigma++
+                            }
                         }
                         AppItem(it.loadIcon(packageManager),
                                 it.loadLabel(packageManager).toString(),
@@ -278,6 +308,7 @@ class MainActivity : AppCompatActivity() {
 
     fun sdkArray(): List<String?> {
         val sdkarray = arrayListOf<String>()
+        sdkarray.add(freezer)
 
         val list = resources.getStringArray(R.array.permary)
         for (n in list.indices) {

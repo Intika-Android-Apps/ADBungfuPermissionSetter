@@ -28,10 +28,18 @@ fun checkAppOpsPermission(pkg: String, appops: String): CompletableFutureCompat<
 fun setAppOpsPermission(pkg: String, appops: String, setEnabled: Boolean, callback: Callback): CompletableFutureCompat<Boolean> {
     val future = CompletableFutureCompat<Boolean>()
     val cmd = if (setEnabled) "allow" else "ignore"
+    val su_cmd: String
+    var isSuccess: Boolean
 
-    shell.addCommand("appops set $pkg $appops $cmd", 1) { _, _, output: MutableList<String> ->
+    if (appops.equals(freezer)) {
+        if (!setEnabled) su_cmd = "pm disable-user $pkg"
+                else su_cmd = "pm enable $pkg"
+    } else su_cmd = "appops set $pkg $appops $cmd"
+
+    shell.addCommand(su_cmd, 1) { _, _, output: MutableList<String> ->
         val outputString = output.joinToString()
-        val isSuccess = outputString.trim().isEmpty()
+        if (appops.equals(freezer)) isSuccess = outputString.contains("new state")
+        else isSuccess = outputString.trim().isEmpty()
         callback(isSuccess)
         future.complete(isSuccess)
     }
