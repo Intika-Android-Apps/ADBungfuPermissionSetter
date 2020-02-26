@@ -1,11 +1,11 @@
-## superuser ADBcmd appOps restrictor ^4 rooted devices ONLY :# su Magisk (aosp/opPerms)
+## superuser ADBcmd appOps freezer ^4 rooted devices ONLY :# su Magisk (aosp/opPerms)
 
 
 ### Up-left white spinner to select appOps or icon/Launcher usefullest RUN_IN_BACKGROUND shortcut.
 
 Apps are grayed for empty uses & listed with time durations for active ones.
 
-You can use icon/Launcher shortcut or sort option to toggle +/- ☢DARK/System apps (use with extreme care!).
+You can use icon/Launcher shortcut or sort option to toggle +/- ☢DARK/System apps (use with extreme care!). Run it to re-enabled frozen apps.
 
 (I)nformation has a reset for all appOps, be aware: it will wipe all your previous aosp appOps settings. 
 

@@ -1,0 +1,4 @@
+- disable/enable #su feature which also speed-up launch a lot compare to the slowness of any appops iterative checking injection on previous (wake-lock or other).
+
+Use ☢DARK/System apps to re-enabled frozen apps that won't show anymore in regular simplified screen after update.
+Included is [Active] tag (instead of appops time-in) for apps with stand-by status up. 
