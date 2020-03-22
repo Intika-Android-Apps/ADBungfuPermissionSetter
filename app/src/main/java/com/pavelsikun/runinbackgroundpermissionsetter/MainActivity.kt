@@ -1,8 +1,8 @@
 package com.pavelsikun.runinbackgroundpermissionsetter
 
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 
 import android.content.pm.PackageManager
 import android.content.Intent
@@ -13,9 +13,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import org.jetbrains.anko.coroutines.experimental.bg
 import com.yarolegovich.lovelydialog.LovelyStandardDialog
 import com.yarolegovich.lovelydialog.LovelyProgressDialog
 import kotlinx.android.synthetic.main.search_view.*
@@ -26,16 +23,19 @@ import android.app.Activity
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.os.Build
-import android.support.design.widget.Snackbar
+import com.google.android.material.snackbar.Snackbar
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
 import com.pavelsikun.runinbackgroundpermissionsetter.AppListAdapter.SortMethod
+import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
+
 const val freezer = "1ive + stand-by"
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), CoroutineScope {
     val B_SDK = Build.VERSION.SDK_INT
     var appopstype = freezer
     var sigma = 0
@@ -56,12 +56,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
+    lateinit var masterJob: Job //https://stackoverflow.com/questions/53125385/how-to-migrate-kotlin-from-1-2-to-kotlin-1-3-0-then-using-async-ui-and-bg-in-a
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + masterJob
+
+    override fun onDestroy() {
+        super.onDestroy()
+        masterJob.cancel()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        masterJob = Job()
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
         val spinner = findViewById<Spinner>(R.id.spinner)
@@ -132,20 +138,20 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    fun loadApps(boolean: Boolean) {
+    fun CoroutineScope.loadApps(boolean: Boolean) {
         swipeRefreshLayout.isRefreshing = false
-        val ad = LovelyProgressDialog(this)
+        val ad = LovelyProgressDialog(this@MainActivity)
                 .setTopColorRes(R.color.accent)
                 .setTopTitle(getString(R.string.loading_dialog_title))
                 //.setTopTitleColor(getColor(android.R.color.white))
                 .setIcon(R.drawable.clock_alert)
                 .setMessage(appopstype).show()
 
-        async(UI) {
+        this.launch {
             if (boolean){
                 val appsInfos = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
                 appsInfos.map {
-                    val data = bg {
+                    val data = withContext(Dispatchers.IO) {
                         val ztest: String
                         var fuel = ""
                         if (appopstype.equals(freezer)) {
@@ -173,7 +179,7 @@ class MainActivity : AppCompatActivity() {
                                 testB(ztest))
                     }
 
-                    adapter.addItem(data.await())
+                    adapter.addItem(data)
 
                     if (adapter.itemCount == appsInfos.size) {
                         adapter.sort()
@@ -187,7 +193,7 @@ class MainActivity : AppCompatActivity() {
                 val apps = packageManager.queryIntentActivities(intent, PackageManager.GET_META_DATA)
 
                 apps.map {
-                    val data = bg {
+                    val data = withContext(Dispatchers.IO) {
                         val ztest: String
                         var fuel = ""
                         if (appopstype.equals(freezer)) {
@@ -214,7 +220,7 @@ class MainActivity : AppCompatActivity() {
                                 testB(ztest))
                     }
 
-                    adapter.addItem(data.await())
+                    adapter.addItem(data)
 
                     if (adapter.itemCount == apps.size) {
                         adapter.sort()
