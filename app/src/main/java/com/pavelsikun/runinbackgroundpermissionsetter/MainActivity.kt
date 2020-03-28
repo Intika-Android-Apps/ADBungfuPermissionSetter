@@ -22,6 +22,7 @@ import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import com.google.android.material.snackbar.Snackbar
 import android.view.inputmethod.InputMethodManager
@@ -29,6 +30,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.recyclerview.widget.DividerItemDecoration
 import com.pavelsikun.runinbackgroundpermissionsetter.AppListAdapter.SortMethod
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
@@ -42,7 +44,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     var full = false
 
     val adapter by lazy {
-        AppListAdapter { (_, appName, appTime, appPackage, isEnabled) ->
+        AppListAdapter { (_, appName, appTime, appPackage, isSystem, isEnabled) ->
             setAppOpsPermission(appPackage, appopstype, isEnabled) { isSuccess ->
                 val status = if (isEnabled) getString(R.string.message_allow) else getString(R.string.message_ignore)
                 val msgSuccess = "$appName $appopstype ${getString(R.string.message_was_set_to)} '$status'"
@@ -81,6 +83,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
 
 
+        recycler.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
         recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter = adapter
 
@@ -176,6 +179,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                                 it.loadLabel(packageManager).toString(),
                                 fuel,
                                 it.packageName,
+                                it.flags and  ApplicationInfo.FLAG_SYSTEM != 0,
                                 testB(ztest))
                     }
 
@@ -217,6 +221,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                                 it.loadLabel(packageManager).toString(),
                                 fuel,
                                 it.activityInfo.packageName,
+                                it.activityInfo.applicationInfo.flags and  ApplicationInfo.FLAG_SYSTEM != 0,
                                 testB(ztest))
                     }
 

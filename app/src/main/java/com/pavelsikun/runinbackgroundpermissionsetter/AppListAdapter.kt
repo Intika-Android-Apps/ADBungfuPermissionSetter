@@ -36,9 +36,17 @@ class AppListAdapter(val itemClick: (AppItem) -> Unit) : RecyclerView.Adapter<Ap
             appName.text = appItem.appName
             appTime.text = appItem.appTime
             appPackage.text = appItem.appPackage
+            if (appItem.isSystem) {
+                appName.setTextColor(Color.BLACK)
+                //appName.setError("zz")
+            }
+            else {
+                appName.setTextColor(Color.WHITE)
+                //appName.setError(null)
+            }
             if (appTime.length() == 0) {
-                itemView.setBackgroundColor(Color.LTGRAY)
-            } else itemView.setBackgroundColor(Color.WHITE)
+                itemView.setBackgroundColor(Color.GRAY)
+            } else itemView.setBackgroundColor(Color.LTGRAY)
 
             permissionSwitch.isChecked = appItem.isEnabled
             setStatus(appItem.isEnabled)
