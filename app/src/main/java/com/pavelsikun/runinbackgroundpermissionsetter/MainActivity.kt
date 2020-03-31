@@ -22,6 +22,7 @@ import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.DialogInterface
 import android.content.pm.ApplicationInfo
 import android.os.Build
 import com.google.android.material.snackbar.Snackbar
@@ -29,8 +30,9 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
-import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.DividerItemDecoration
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.pavelsikun.runinbackgroundpermissionsetter.AppListAdapter.SortMethod
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
@@ -72,8 +74,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         masterJob = Job()
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+
+        val fab = findViewById<FloatingActionButton>(R.id.fab)!!
+        fab.setOnClickListener(View.OnClickListener { showActionsDialog() })
+
         val spinner = findViewById<Spinner>(R.id.spinner)
         toolbar.title = "_"
+
         if (intent != null) {
             if (intent.getStringExtra("extraID") != null)
                 appopstype = intent.getStringExtra("extraID")
@@ -82,15 +89,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         }
 
-
         recycler.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
         recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter = adapter
 
-        swipeRefreshLayout.setOnRefreshListener {
-            adapter.clear()
-            loadApps(full)
-        }
+        swipeRefreshLayout.setOnRefreshListener {refresh()}
 
         if (spinner != null) {
             val adapterq = ArrayAdapter(this, android.R.layout.simple_spinner_item, sdkArray())
@@ -104,7 +107,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                                             view: View?, position: Int, id: Long) {
                     Snackbar.make(coordinator,
                             parent.getItemAtPosition(position).toString(), Snackbar.LENGTH_LONG).show()
-                    Toast.makeText(this@MainActivity, "OnItemSelectedListener : " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show()
+                    //Toast.makeText(this@MainActivity, "OnItemSelectedListener : " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show()
                     appopstype = parent.getItemAtPosition(position).toString()
                     toolbar.subtitle = fully(full) + "sdk" + B_SDK.toString() + ":" + appopstype
                     adapter.clear()
@@ -169,10 +172,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                                 }
                             }
                         } else {
-                            ztest = checkAppOpsPermission(it.packageName , appopstype).get()
-                            if (ztest.contains("time")) {
-                                fuel = ztest.substring(ztest.indexOf("time")+5)
-                                sigma++
+                            if (B_SDK == Build.VERSION_CODES.LOLLIPOP) {
+                                ztest = "no"
+                                fuel = getString(R.string.message_blind)
+                            } else {
+                                ztest = checkAppOpsPermission(it.packageName , appopstype).get()
+                                if (ztest.contains("time")) {
+                                    fuel = ztest.substring(ztest.indexOf("time")+5)
+                                    sigma++
+                                }
                             }
                         }
                         AppItem(it.loadIcon(packageManager),
@@ -211,10 +219,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                                 }
                             }
                         } else {
-                            ztest = checkAppOpsPermission(it.activityInfo.packageName , appopstype).get()
-                            if (ztest.contains("time")) {
-                                fuel = ztest.substring(ztest.indexOf("time")+5)
-                                sigma++
+                            if (B_SDK == Build.VERSION_CODES.LOLLIPOP) {
+                                ztest = "no"
+                                fuel = getString(R.string.message_blind)
+                            } else {
+                                ztest = checkAppOpsPermission(it.activityInfo.packageName , appopstype).get()
+                                if (ztest.contains("time")) {
+                                    fuel = ztest.substring(ztest.indexOf("time")+5)
+                                    sigma++
+                                }
                             }
                         }
                         AppItem(it.loadIcon(packageManager),
@@ -306,11 +319,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 .setButtonsColorRes(R.color.primary)
                 .setIcon(R.drawable.information)
                 .setMessage(R.string.info_dialog_message)
-                .setNegativeButton("!RESET ALL appOps!") {
-                    Snackbar.make(coordinator, resetAppOpsPermission("").get(), Snackbar.LENGTH_LONG).show()
-                    adapter.clear()
-                    loadApps(full)
-                }
+                .setNeutralButton("ok", null)
                 .setPositiveButton(getString(R.string.button_open_github)) {
                     openGithub()
                 }
@@ -331,4 +340,49 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         return sdkarray.sorted()
     }
 
+    private fun refresh() {
+        if (B_SDK == Build.VERSION_CODES.LOLLIPOP && !appopstype.equals(freezer)) {
+            Snackbar.make(coordinator, "No Lollipop/20,,, nu Refresh ! " + getString(R.string.message_blind), Snackbar.LENGTH_LONG).show()
+            swipeRefreshLayout.isRefreshing = false
+        } else {
+            adapter.clear()
+            loadApps(full)
+        }
+    }
+
+
+    private fun showActionsDialog() {
+        val actions = mutableListOf(
+                getString(R.string.action_refresh),
+                getString(R.string.action_reset_all)
+                )
+        if (B_SDK >= Build.VERSION_CODES.P) actions.add(getString(R.string.action_wipe_all))
+
+        AlertDialog.Builder(this)
+                .setTitle("Select action")
+                .setCancelable(true)
+                .setNegativeButton(getString(R.string.button_close_dialog)) { dialog, which -> dialog.cancel()}
+                .setItems(actions.toTypedArray()) { dialog, which ->
+            when (which) {
+                0 -> {
+                    refresh()
+                }
+                1 -> {
+                    Thread(Runnable{
+                        Snackbar.make(coordinator, suString("appops reset").get(), Snackbar.LENGTH_LONG).show()
+
+                    }).start()
+                    adapter.clear()
+                    loadApps(full)
+                }
+                2 -> {
+                    Thread(Runnable{
+                        Snackbar.make(coordinator, suBool("pm trim-caches 9999G").get().toString(), Snackbar.LENGTH_LONG).show()
+                    }).start()
+                }
+
+            }
+        }.show()
+                .getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(resources.getColor(R.color.primary))
+    }
 }

@@ -48,13 +48,23 @@ fun setAppOpsPermission(pkg: String, appops: String, setEnabled: Boolean, callba
 
 }
 
-fun resetAppOpsPermission(pkg: String): CompletableFutureCompat<String> {
+fun suBool(cmd: String): CompletableFutureCompat<Boolean> {
+    var isSuccess: Boolean
+    val future = CompletableFutureCompat<Boolean>()
+    shell.addCommand(cmd, 1) { _, _, output: MutableList<String> ->
+        val outputString = output.joinToString()
+        isSuccess = outputString.trim().isEmpty()
+        future.complete(isSuccess)
+    }
+    return future
+}
+
+fun suString(cmd: String): CompletableFutureCompat<String> {
     val future = CompletableFutureCompat<String>()
-    shell.addCommand("appops reset $pkg", 1) { _, _, output: MutableList<String> ->
+    shell.addCommand(cmd, 1) { _, _, output: MutableList<String> ->
         val outputString = output.joinToString()
         future.complete(outputString)
     }
-
     return future
 }
 

@@ -9,6 +9,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:background="@color/primary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -24,9 +25,10 @@
                 android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
                 <Spinner
                     android:id="@+id/spinner"
-                    android:background="#FFFFFF"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:background="@color/accent"
+                    android:layout_width="130dp"
+                    android:layout_height="wrap_content"
+                    />
 
             <include layout="@layout/search_view"/>
 
@@ -51,5 +53,16 @@
             app:fastScrollHorizontalThumbDrawable="@drawable/fastscroll_thumb_selector"/>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_margin="12dp"
+        app:rippleColor="@color/accent"
+        android:tint="@color/accent"
+        android:backgroundTint="@color/primary"
+        android:src="@android:drawable/ic_menu_more"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

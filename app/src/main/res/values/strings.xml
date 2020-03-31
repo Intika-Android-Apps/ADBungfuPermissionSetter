@@ -8,6 +8,7 @@
     <string name="button_open_github">GPLv3 Bitbucket</string>
     <string name="button_open_information">information</string>
 
+    <string name="message_blind">(Blind Mode ONLY)</string>
     <string name="message_there_was_error">There was error setting</string>
     <string name="message_to">to</string>
     <string name="message_was_set_to">set to</string>
@@ -18,6 +19,9 @@
     <string name="app_name">ADBungFu</string>
 
     <string name="action_search">Search</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_reset_all">!RESET ALL appOps!</string>
+    <string name="action_wipe_all">Trim caches for all apps</string>
 
     <string name="action_sort">Sort</string>
     <string name="action_sort_name">by name</string>
