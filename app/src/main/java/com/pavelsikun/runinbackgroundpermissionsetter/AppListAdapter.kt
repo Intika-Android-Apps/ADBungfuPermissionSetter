@@ -6,6 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.listitem_app.view.*
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 
 /**
  * Created by Pavel Sikun on 16.07.17.
@@ -58,6 +61,14 @@ class AppListAdapter(val itemClick: (AppItem) -> Unit) : RecyclerView.Adapter<Ap
 
             container.setOnClickListener {
                 permissionSwitch.isChecked = !permissionSwitch.isChecked
+            }
+
+            container.setOnLongClickListener {
+                    val infoIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    infoIntent.addCategory(Intent.CATEGORY_DEFAULT)
+                    infoIntent.data = Uri.parse("package:${appItem.appPackage}")
+                    context.startActivity(infoIntent)
+                return@setOnLongClickListener true
             }
         }
 

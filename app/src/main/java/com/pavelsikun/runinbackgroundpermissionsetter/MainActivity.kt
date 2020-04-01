@@ -6,14 +6,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 
 import android.content.pm.PackageManager
 import android.content.Intent
-import android.net.Uri
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
-import com.yarolegovich.lovelydialog.LovelyStandardDialog
 import com.yarolegovich.lovelydialog.LovelyProgressDialog
 import kotlinx.android.synthetic.main.search_view.*
 import android.view.ViewAnimationUtils
@@ -46,7 +44,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     var full = false
 
     val adapter by lazy {
-        AppListAdapter { (_, appName, appTime, appPackage, isSystem, isEnabled) ->
+        AppListAdapter { (_, appName, _, appPackage, _, isEnabled) ->
             setAppOpsPermission(appPackage, appopstype, isEnabled) { isSuccess ->
                 val status = if (isEnabled) getString(R.string.message_allow) else getString(R.string.message_ignore)
                 val msgSuccess = "$appName $appopstype ${getString(R.string.message_was_set_to)} '$status'"
@@ -130,7 +128,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_search -> showSearchBar()
-            R.id.action_info -> showInfoDialog()
             R.id.action_sort_name -> adapter.sort(SortMethod.NAME)
             R.id.action_sort_package -> adapter.sort(SortMethod.PACKAGE)
             R.id.action_sort_disabled_first -> adapter.sort(SortMethod.STATE)
@@ -140,6 +137,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 adapter.clear()
                 loadApps(full)
             }
+            R.id.action_info -> android.app.AlertDialog.Builder(this)
+                    .setTitle(R.string.button_open_information)
+                    .setView(layoutInflater.inflate(R.layout.about_dialog_message, null))
+                    .setNegativeButton(android.R.string.ok, null)
+                    .show()
+
         }
         return super.onOptionsItemSelected(item)
     }
@@ -261,10 +264,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         else return ""
     }
 
-    fun openGithub() {
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://bitbucket.org/oF2pks/adbungfupermissionsetter/commits/")))
-    }
-
     fun showSearchBar() {
         val viewWidth = searchOverlay.measuredWidth.toFloat()
         val x = (searchOverlay.measuredWidth * 0.95).toInt()
@@ -285,6 +284,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         exitAnim.addListener(object: AnimatorListenerAdapter() {
             override fun onAnimationEnd(animator: Animator) {
                 searchOverlay.visibility = View.INVISIBLE
+                fab.visibility = View.VISIBLE
             }
         })
 
@@ -308,22 +308,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         })
 
         searchOverlay.visibility = View.VISIBLE
+        fab.visibility = View.INVISIBLE
         enterAnim.start()
-    }
-
-    fun showInfoDialog() {
-        LovelyStandardDialog(this)
-                .setTopColorRes(R.color.accent)
-                .setTopTitle(getString(R.string.button_open_information))
-                //.setTopTitleColor(getColor(android.R.color.white))
-                .setButtonsColorRes(R.color.primary)
-                .setIcon(R.drawable.information)
-                .setMessage(R.string.info_dialog_message)
-                .setNeutralButton("ok", null)
-                .setPositiveButton(getString(R.string.button_open_github)) {
-                    openGithub()
-                }
-                .show()
     }
 
     fun sdkArray(): List<String?> {
@@ -354,33 +340,35 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     private fun showActionsDialog() {
         val actions = mutableListOf(
                 getString(R.string.action_refresh),
-                getString(R.string.action_reset_all)
+                getString(R.string.action_wipe_all)
                 )
-        if (B_SDK >= Build.VERSION_CODES.P) actions.add(getString(R.string.action_wipe_all))
+        if (B_SDK >= Build.VERSION_CODES.LOLLIPOP_MR1) actions.add(getString(R.string.action_reset_all))
 
         AlertDialog.Builder(this)
                 .setTitle("Select action")
                 .setCancelable(true)
-                .setNegativeButton(getString(R.string.button_close_dialog)) { dialog, which -> dialog.cancel()}
-                .setItems(actions.toTypedArray()) { dialog, which ->
+                .setNegativeButton(getString(R.string.button_close_dialog)) { dialog, _ -> dialog.cancel()}
+                .setItems(actions.toTypedArray()) { _, which ->
             when (which) {
                 0 -> {
                     refresh()
                 }
                 1 -> {
                     Thread(Runnable{
-                        Snackbar.make(coordinator, suString("appops reset").get(), Snackbar.LENGTH_LONG).show()
-
+                        Snackbar.make(coordinator, suBool("pm trim-caches 999999G").get().toString(), Snackbar.LENGTH_LONG).show()
                     }).start()
-                    adapter.clear()
-                    loadApps(full)
                 }
                 2 -> {
                     Thread(Runnable{
-                        Snackbar.make(coordinator, suBool("pm trim-caches 9999G").get().toString(), Snackbar.LENGTH_LONG).show()
-                    }).start()
-                }
+                        Snackbar.make(coordinator, suString("appops reset").get(), Snackbar.LENGTH_LONG).show()
 
+                    }).start()
+                    if (!appopstype.equals(freezer)) {
+                        adapter.clear()
+                        loadApps(full)
+                    }
+
+                }
             }
         }.show()
                 .getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(resources.getColor(R.color.primary))

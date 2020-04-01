@@ -1,6 +1,14 @@
 <resources>
 
-    <string name="info_dialog_message">Complete appOps hack of BackgroundRestrictor \n https://github.com/MrBIMC/RunInBackgroundPermissionSetter</string>
+    <string name="info_dialog_message">
+        \nLongPress: android@Setting/Apps
+        \n\nBlack texted labels: /System apps,
+        \n\nGray backgrounded: Inactive apps,\n\n
+        - Trim all app/caches via actions button.\n\n
+        - Lollipop SDK_20 Blind Mode ONLY.
+        \n\nprim-origin: https://github.com/MrBIMC/RunInBackgroundPermissionSetter
+        \n\nGPLv3: https://bitbucket.org/oF2pks/adbungfupermissionsetter/commits/
+    </string>
     <string name="loading_dialog_message">Checking root status, loading list of apps and retrieving their RUN_IN_BACKGROUND state…</string>
     <string name="loading_dialog_title">Loading…</string>
 
