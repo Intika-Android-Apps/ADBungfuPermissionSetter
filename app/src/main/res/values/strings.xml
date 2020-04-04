@@ -26,6 +26,8 @@
 
     <string name="app_name">ADBungFu</string>
 
+    <string name="action_adb">List all ADB cmds</string>
+    <string name="action_deviceidle">List all whitelisted apps</string>
     <string name="action_search">Search</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_reset_all">!RESET ALL appOps!</string>
@@ -37,6 +39,7 @@
     <string name="action_sort_disabled_first">by restricted first</string>
     <string name="search_hint">Enter app name or package…</string>
 
+    <string name="s0">$ adb shell ____</string>
     <string name="s1">+/- ☢DARK/System  \u21af</string>
     <string name="s2">RUN_IN_BACKGROUND</string>
 

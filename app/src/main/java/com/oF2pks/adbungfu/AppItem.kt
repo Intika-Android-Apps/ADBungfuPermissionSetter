@@ -1,4 +1,4 @@
-package com.pavelsikun.runinbackgroundpermissionsetter
+package com.oF2pks.adbungfu
 
 import android.graphics.drawable.Drawable
 
