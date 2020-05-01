@@ -2,7 +2,7 @@ package com.oF2pks.adbungfu
 
 import android.app.ProgressDialog
 import android.content.Context
-import android.content.pm.PackageManager
+import android.content.pm.ApplicationInfo
 import eu.chainfire.libsuperuser.Shell
 import java.io.File
 import java.io.FileNotFoundException
@@ -10,6 +10,7 @@ import java.io.FileWriter
 import java.lang.Exception
 import java.util.*
 import java.util.concurrent.*
+import kotlin.collections.ArrayList
 
 
 /**
@@ -80,11 +81,11 @@ fun suString(cmd: String): CompletableFutureCompat<String> {
     return future
 }
 
-fun suList(cmd: String): ArrayList<String> {
+fun suList(ctx: Context, cmd: String): ArrayList<String> {
     val stdOUT = ArrayList<String>()
-    if (Shell.SU.available()) {
+    val stdERR = ArrayList<String>()
+    try {
         Shell.Pool.SU.get()
-        val stdERR = ArrayList<String>()
         Shell.Pool.SU.run(cmd,stdOUT,stdERR,true)
 /*       Shell.Pool.SU.run(cmd, object : Shell.OnSyncCommandLineListener {
             override fun onSTDOUT(line: String) {
@@ -96,13 +97,18 @@ fun suList(cmd: String): ArrayList<String> {
             }
         })*/
 
+        return stdOUT
+    } catch (e:Exception) {
+        stdERR.add(ctx.getString(R.string.app_no_su))
+        stdERR.add(e.toString())
+        stdERR.addAll(stdOUT)
+        return stdERR
     }
-    return stdOUT
 }
 
-fun suADB(suList: ArrayList<String> , output: File): HashMap<String, List<String>> {
+fun suADB(ctx: Context, suList: ArrayList<String> , output: File): HashMap<String, List<String>> {
     val tableADB: HashMap<String, List<String>> = HashMap()
-    if (Shell.SU.available()) {
+    try {
         val shell: Shell.Threaded = Shell.Pool.SU.get()
         val writer: FileWriter
         var zz = ""
@@ -121,56 +127,57 @@ fun suADB(suList: ArrayList<String> , output: File): HashMap<String, List<String
                     /*|| it.contains("gpu")
                     || it.contains("sensorservice")*/)
             else {
-                try {
-                    shell.run(it, object : Shell.OnSyncCommandLineListener {
-                        override fun onSTDOUT(line: String) {
-                            if (line.contains("cmd: Failure calling service")) {
-                                zz += "$it \n"
-                                if (line.endsWith("Broken pipe (32)")) {
-                                    zz += "#"
-                                    writer.write(zz)
-                                    writer.close()
-                                }
+                shell.run(it, object : Shell.OnSyncCommandLineListener {
+                    override fun onSTDOUT(line: String) {
+                        if (line.contains("cmd: Failure calling service")) {
+                            zz += "$it \n"
+                            if (line.endsWith("Broken pipe (32)")) {
+                                zz += "#"
+                                writer.write(zz)
+                                writer.close()
                             }
-                            tmp.add(line+"\n")
                         }
+                        tmp.add(line+"\n")
+                    }
 
-                        override fun onSTDERR(line: String) {
-                            // hey, some output on STDERR!
-                        }
-                    })
-                } catch (e: Exception) {
-                }
+                    override fun onSTDERR(line: String) {
+                        // hey, some output on STDERR!
+                    }
+                })
                 if (tmp.size > 1) tableADB[it+" "+tmp.size] = tmp //else ADB.put("_"+it,tmp)
                 else zz += "$it \n"
             }
         }
         writer.write(zz)
         writer.close()
+    } catch (e:Exception) {
+        tableADB[ctx.getString(R.string.app_no_su)] =
+                arrayListOf(e.toString())
     }
-
     return tableADB
-
 }
 
-fun suProfman(ctx: Context, ad: ProgressDialog): Int {
+fun suProfman(appsInfos: MutableList<ApplicationInfo>, ctx: Context, ad: ProgressDialog): Int {
     if (Shell.SU.available()) {
         val shell: Shell.Threaded = Shell.Pool.SU.get()
-        val appsInfos = ctx.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
         for (i in appsInfos.indices) {
-            if (i%20 == 0) {
+            if (i%15 == 0) {
                 ad.setMessage(appsInfos.size.toString() + "/"+i)
                 ad.show()
             }
-            if (appsInfos[i].packageName != "android" && appsInfos[i].packageName != "com.oF2pks.adbungfu") {
+            if (appsInfos[i].packageName != "android") {// && appsInfos[i].packageName != "com.oF2pks.adbungfu") {
                 shell.run("cmd package dump-profiles ${appsInfos[i].packageName}")
             }
         }
-        shell.run("cp -RF /data/misc/profman ${ctx.getExternalFilesDir(null)}")
+        val dataDir = "${ctx.getExternalFilesDir(null)}/profman"
+        shell.run("mkdir $dataDir")
+        shell.run("mv -f /data/misc/profman/* $dataDir")
         return appsInfos.size
     }
     return 0
 }
+
+fun toBeSu(): Boolean { return Shell.SU.available() }
 
 
 /**

@@ -34,6 +34,8 @@ import com.oF2pks.adbungfu.AppListAdapter.SortMethod
 import com.oF2pks.adbungfu.ExpandHmap.ExpandableListDetail
 import kotlinx.coroutines.*
 import java.io.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.coroutines.CoroutineContext
 
 const val freezer = "1ive + stand-by"
@@ -46,6 +48,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     private var mAlertDialog: ProgressDialog? =null
     private var mAlertText:String =""
+    private var appsInfos: MutableList<ApplicationInfo> = ArrayList()
 
     val adapter by lazy {
         AppListAdapter { (_, appName, _, appPackage, _, isEnabled) ->
@@ -86,6 +89,14 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         val spinner = findViewById<Spinner>(R.id.spinner)
         toolbar.title = "_"
+
+        mAlertDialog = ProgressDialog(this@MainActivity)
+        if (toBeSu()) mAlertDialog!!.setTitle(getString(R.string.loading_dialog_title))
+        else {
+            mAlertDialog!!.setTitle(getString(R.string.app_no_su))
+            Toast.makeText(this@MainActivity, "..." + getString(R.string.app_no_su).toUpperCase(), Toast.LENGTH_LONG).show()
+            noToBeSu()
+        }
 
         if (intent != null) {
             if (intent.getStringExtra("extraID") != null)
@@ -139,6 +150,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             R.id.action_sort_name -> adapter.sort(SortMethod.NAME)
             R.id.action_sort_package -> adapter.sort(SortMethod.PACKAGE)
             R.id.action_sort_disabled_first -> adapter.sort(SortMethod.STATE)
+            R.id.action_sort_activity -> adapter.sort(SortMethod.ACTIVITY)
             R.id.action_system -> {
                 //toolbar.subtitle = fully(full) + "sdk" + Build.VERSION.SDK_INT.toString() + ":" + appopstype
                 full = !full
@@ -158,8 +170,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     fun CoroutineScope.loadApps(boolean: Boolean) {
         swipeRefreshLayout.isRefreshing = false
 
-        mAlertDialog = ProgressDialog(this@MainActivity)
-        mAlertDialog!!.setTitle(getString(R.string.loading_dialog_title))
         //mAlertDialog!!.setTopColorRes(R.color.accent)
         //.setTopTitleColor(getColor(android.R.color.white))
         mAlertDialog!!.setIcon(R.drawable.clock_alert)
@@ -167,107 +177,66 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         mAlertDialog!!.show()
 
         this.launch {
-            if (boolean){
-                val appsInfos = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-                mAlertText = appopstype + " " + appsInfos.size
-                runOnUiThread (changeTextAlert)
-                for (i in appsInfos.indices) {
-                    if (i%20 == 0) {
-                        mAlertDialog!!.setMessage(appopstype + " " + appsInfos.size + "/"+i)
-                        mAlertDialog!!.show()
-                        /*mAlertText = appopstype + " " + appsInfos.size + "/"+i
-                        runOnUiThread (changeTextAlert)*/
-                    }
-                    val data = withContext(Dispatchers.IO) {
-                        val ztest: String
-                        var fuel = ""
-                        if (appopstype == freezer) {
-                            ztest = if (appsInfos[i].enabled) "allow"
-                            else "deny"
-                            if (Build.VERSION.SDK_INT >= 23) {
-                                val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-                                if (usm.isAppInactive(appsInfos[i].packageName)) fuel = ""
-                                else {
-                                    fuel ="Active"
-                                    sigma++
-                                }
-                            }
-                        } else {
-                            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-                                ztest = "no"
-                                fuel = getString(R.string.message_blind)
-                            } else {
-                                ztest = checkAppOpsPermission(appsInfos[i].packageName , appopstype).get()
-                                if (ztest.contains("time")) {
-                                    fuel = ztest.substring(ztest.indexOf("time")+5)
-                                    sigma++
-                                }
-                            }
-                        }
-                        AppItem(appsInfos[i].loadIcon(packageManager),
-                                appsInfos[i].loadLabel(packageManager).toString(),
-                                fuel,
-                                appsInfos[i].packageName,
-                                appsInfos[i].flags and  ApplicationInfo.FLAG_SYSTEM != 0,
-                                testB(ztest))
-                    }
-
-                    adapter.addItem(data)
-
-                    if (adapter.itemCount == appsInfos.size) {
-                        adapter.sort()
-                        mAlertDialog!!.dismiss()
-
-                    }
-
-                }
+            appsInfos = ArrayList()
+            if (boolean) {
+                appsInfos = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
             } else {
-                val intent = Intent(Intent.ACTION_MAIN, null)
-                intent.addCategory(Intent.CATEGORY_LAUNCHER)
-                val apps = packageManager.queryIntentActivities(intent, PackageManager.GET_META_DATA)
-                mAlertText = appopstype + " " + apps.size
-                runOnUiThread (changeTextAlert)
-                apps.map {
-                    val data = withContext(Dispatchers.IO) {
-                        val ztest: String
-                        var fuel = ""
-                        if (appopstype == freezer) {
-                            ztest = "allow"
-                            if (Build.VERSION.SDK_INT >= 23) {
-                                val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-                                if (usm.isAppInactive(it.activityInfo.packageName)) fuel = ""
-                                else {
-                                    fuel ="Active"
-                                    sigma++
-                                }
-                            }
-                        } else {
-                            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-                                ztest = "no"
-                                fuel = getString(R.string.message_blind)
-                            } else {
-                                ztest = checkAppOpsPermission(it.activityInfo.packageName , appopstype).get()
-                                if (ztest.contains("time")) {
-                                    fuel = ztest.substring(ztest.indexOf("time")+5)
-                                    sigma++
-                                }
+                packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN, null).addCategory(Intent.CATEGORY_LAUNCHER)
+                            , PackageManager.GET_META_DATA)
+                        .distinctBy { it.activityInfo.packageName }
+                        .map { appsInfos.add(it.activityInfo.applicationInfo) }
+            }
+            mAlertText = appopstype + " " + appsInfos.size
+            runOnUiThread (changeTextAlert)
+            for (i in appsInfos.indices) {
+                if (i%15 == 0) {
+                    mAlertDialog!!.setMessage(appopstype + " " + appsInfos.size + "/"+i)
+                    mAlertDialog!!.show()
+                    /*mAlertText = appopstype + " " + appsInfos.size + "/"+i
+                    runOnUiThread (changeTextAlert)*/
+                }
+                val data = withContext(Dispatchers.IO) {
+                    val ztest: String
+                    var fuel = ""
+                    if (appopstype == freezer) {
+                        ztest = if (appsInfos[i].enabled) "allow"
+                        else "deny"
+                        if (Build.VERSION.SDK_INT >= 23) {
+                            val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+                            if (usm.isAppInactive(appsInfos[i].packageName)) fuel = ""
+                            else {
+                                fuel ="Active"
+                                sigma++
                             }
                         }
-                        AppItem(it.loadIcon(packageManager),
-                                it.loadLabel(packageManager).toString(),
-                                fuel,
-                                it.activityInfo.packageName,
-                                it.activityInfo.applicationInfo.flags and  ApplicationInfo.FLAG_SYSTEM != 0,
-                                testB(ztest))
+                    } else {
+                        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
+                            ztest = "no"
+                            fuel = getString(R.string.message_blind)
+                        } else {
+                            ztest = checkAppOpsPermission(appsInfos[i].packageName , appopstype).get()
+                            if (ztest.contains("time")) {
+                                fuel = ztest.substring(ztest.indexOf("time")+5)
+                                sigma++
+                            }
+                        }
                     }
-
-                    adapter.addItem(data)
-
-                    if (adapter.itemCount == apps.size) {
-                        adapter.sort()
-                        mAlertDialog!!.dismiss()
-                    }
+                    AppItem(appsInfos[i].loadIcon(packageManager),
+                            appsInfos[i].loadLabel(packageManager).toString(),
+                            fuel,
+                            appsInfos[i].packageName,
+                            appsInfos[i].flags and  ApplicationInfo.FLAG_SYSTEM != 0,
+                            testB(ztest))
                 }
+
+                adapter.addItem(data)
+
+                if (adapter.itemCount == appsInfos.size) {
+                    adapter.sort()
+                    mAlertDialog!!.dismiss()
+
+                }
+
             }
             toolbar.subtitle = fully(full) + " | \u2211 = " + sigma.toString()
             sigma = 0
@@ -383,18 +352,20 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     refresh()
                 }
                 1 -> {
-                    Thread(Runnable{
+                    if (toBeSu()) Thread(Runnable{
                         Snackbar.make(coordinator, suBool("pm trim-caches 999999G").get().toString(), Snackbar.LENGTH_LONG).show()
                     }).start()
+                    else noToBeSu()
                 }
                 2 -> {
-                    Thread(Runnable{
+                    if (toBeSu()) Thread(Runnable{
                         Snackbar.make(coordinator, suString("am idle-maintenance").get(), Snackbar.LENGTH_LONG).show()
                     }).start()
+                    else noToBeSu()
                 }
                 3 -> {
                     val showText = TextView(this)
-                    showText.text = suList("pm list libraries").joinToString("\n").replace("library:","")
+                    showText.text = suList(this@MainActivity, "pm list libraries").joinToString("\n").replace("library:","")
                     showText.setTextIsSelectable(true)
                     val builder = AlertDialog.Builder(this)
                     builder.setView(showText)
@@ -405,7 +376,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
                 4 -> {
                     val showText = TextView(this)
-                    showText.text = suList("pm list permission-groups").joinToString("\n").replace("permission group:android.permission-group","")
+                    showText.text = suList(this@MainActivity, "pm list permission-groups").joinToString("\n").replace("permission group:android.permission-group","")
                     showText.setTextIsSelectable(true)
                     android.app.AlertDialog.Builder(this)
                             .setTitle(R.string.button_open_information)
@@ -415,7 +386,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
                 5 -> {
                     val showText = TextView(this)
-                    showText.text = suList("am stack list").joinToString("\n")
+                    showText.text = suList(this@MainActivity, "am stack list").joinToString("\n")
                     showText.setTextIsSelectable(true)
                     val builder = AlertDialog.Builder(this , R.style.AppTheme)
                     builder.setView(showText)
@@ -435,7 +406,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                             .setNegativeButton(android.R.string.cancel, null)
                             .setPositiveButton("eXe") {_ , _ ->
                                 val showText = TextView(this)
-                                showText.text = suList(cmdText.text.toString()).joinToString("\n")
+                                showText.text = suList(this@MainActivity, cmdText.text.toString()).joinToString("\n")
                                 showText.setTextIsSelectable(true)
                                 builder.setView(showText)
                                         .setTitle(R.string.button_open_information)
@@ -452,10 +423,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     var bHelper = true
                     val cmdL = arrayListOf(" input   ", "toybox --help ","toybox   ","sqlite3 --help"," dpm   "," pm   "," am   "," zip -h","ls /system/bin","logcat --help")//"ls /system/bin","dexdump -h","/system/bin/sh -dexdump",
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        suList("cmd -l").map {
+                        suList(this@MainActivity, "cmd -l").map {
                             cmdL.add("cmd $it ")
                         }
-                    } else cmdL.addAll(arrayListOf(
+                    } else if (toBeSu()) cmdL.addAll(arrayListOf(
                             " activity ",
                             " appops ",
                             " battery ",
@@ -468,8 +439,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                             " statusbar ",
                             " user ",
                             " webviewupdate "))
+
                     Thread(Runnable{
-                        zz = suADB(cmdL, output!!)
+                        zz = suADB(this@MainActivity, cmdL, output!!)
                         if (bHelper) startActivity(Intent(this, ExpandableListDetail::class.java)
                                 .putExtra("HMAP",zz))
                     }).start()
@@ -491,9 +463,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                             .show()
                 }
                 8 -> {
-                    Thread(Runnable{
+                    if (toBeSu()) Thread(Runnable{
                         Snackbar.make(coordinator, suString("appops reset").get(), Snackbar.LENGTH_LONG).show()
                     }).start()
+                    else noToBeSu()
                     if (appopstype != freezer) {
                         adapter.clear()
                         loadApps(full)
@@ -501,7 +474,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
                 9 -> {
                     val showText = TextView(this)
-                    showText.text = suList("cmd deviceidle whitelist").joinToString("\n").replace("system","")
+                    showText.text = suList(this@MainActivity, "cmd deviceidle whitelist").joinToString("\n").replace("system","")
                     showText.setTextIsSelectable(true)
                     val builder = AlertDialog.Builder(this , R.style.AppTheme)
                     builder.setView(showText)
@@ -511,15 +484,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                             .show()
                 }
                 10 -> {
-                    mAlertDialog = ProgressDialog(this@MainActivity)
-                    mAlertDialog!!.setTitle(getString(R.string.loading_dialog_title))
-                    mAlertDialog!!.setIcon(R.drawable.clock_alert)
-                    mAlertDialog!!.setMessage("PROFMAN")
-                    mAlertDialog!!.show()
+                    val alertDialog = ProgressDialog(this@MainActivity)
+                    alertDialog.setTitle(getString(R.string.loading_dialog_title))
+                    alertDialog.setIcon(R.drawable.clock_alert)
+                    alertDialog.setMessage("PROFMAN")
+                    alertDialog.show()
 
                     Thread(Runnable{
-                        Snackbar.make(coordinator, "PROFMAN:" +suProfman(this, mAlertDialog!!), Snackbar.LENGTH_LONG).show()
-                        mAlertDialog!!.dismiss()
+                        Snackbar.make(coordinator, "PROFMAN:" +suProfman(appsInfos, this, alertDialog), Snackbar.LENGTH_LONG).show()
+                        alertDialog.dismiss()
                     }).start()
                 }
             }
@@ -527,6 +500,17 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 .getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(resources.getColor(R.color.primary))
     }
 
+    private fun noToBeSu() {
+        val showText = TextView(this)
+        showText.text = suList(this@MainActivity, "su").joinToString("\n")
+        showText.setTextIsSelectable(true)
+        android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.button_open_information)
+                .setView(showText)
+                .setNegativeButton(android.R.string.ok, null)
+                .show()
+
+    }
     /*fun ls():String {
         //@SuppressLint("PrivateApi")
         val execClass = Class.forName("android.os.Exec")

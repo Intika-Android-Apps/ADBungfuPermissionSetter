@@ -3,8 +3,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:id="@+id/container"
-    android:background="?selectableItemBackground">
+    android:id="@+id/container">
     <ImageView
         android:id="@+id/appIcon"
         android:layout_width="68dp"

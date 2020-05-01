@@ -25,6 +25,7 @@
     <string name="message_ignore">restrict</string>
 
     <string name="app_name">ADBungFu</string>
+    <string name="app_no_su">No #SU detected !!</string>
 
     <string name="action_adb">List all ADB cmds</string>
     <string name="action_deviceidle">List all whitelisted apps</string>
@@ -37,6 +38,7 @@
     <string name="action_sort_name">by name</string>
     <string name="action_sort_package">by package</string>
     <string name="action_sort_disabled_first">by restricted first</string>
+    <string name="action_sort_activity">(WIP)by activity</string>
     <string name="search_hint">Enter app name or package…</string>
 
     <string name="s0">$ adb shell ____</string>

@@ -13,13 +13,13 @@ import android.provider.Settings
 /**
  * Created by Pavel Sikun on 16.07.17.
  */
-class AppListAdapter(val itemClick: (AppItem) -> Unit) : RecyclerView.Adapter<AppListAdapter.ViewHolder>() {
+class AppListAdapter(private val itemClick: (AppItem) -> Unit) : RecyclerView.Adapter<AppListAdapter.ViewHolder>() {
 
-    enum class SortMethod { NAME, PACKAGE, STATE }
+    enum class SortMethod { NAME, PACKAGE, STATE , ACTIVITY}
 
-    val allItems = ArrayList<AppItem>()
-    val displayedItems = ArrayList<AppItem>()
-    var sortMethod = SortMethod.NAME
+    private val allItems = ArrayList<AppItem>()
+    private val displayedItems = ArrayList<AppItem>()
+    private var sortMethod = SortMethod.NAME
 
     inner class ViewHolder(view: View, val itemClick: (AppItem) -> Unit) : RecyclerView.ViewHolder(view) {
 
@@ -104,11 +104,15 @@ class AppListAdapter(val itemClick: (AppItem) -> Unit) : RecyclerView.Adapter<Ap
                 setItemsToDisplay(allItems)
             }
             SortMethod.PACKAGE -> {
-                allItems.sortBy { it.appPackage }
+                allItems.sortBy { it.appPackage.toLowerCase() }
                 setItemsToDisplay(allItems)
             }
             SortMethod.STATE -> {
                 allItems.sortBy { it.isEnabled }
+                setItemsToDisplay(allItems)
+            }
+            SortMethod.ACTIVITY -> {
+                allItems.sortByDescending { it.appTime }
                 setItemsToDisplay(allItems)
             }
         }
