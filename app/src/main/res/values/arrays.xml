@@ -53,6 +53,10 @@
     <item>29,0,LEGACY_STORAGE</item>
     <item>29,0,ACCESS_ACCESSIBILITY</item>
     <item>29,4,READ_DEVICE_IDENTIFIERS</item>
-    <item>29,5,ACTIVATE_PLATFORM_VPN</item>
+    <item>30,3,QUERY_ALL_PACKAGES</item>
+    <item>30,5,ACTIVATE_PLATFORM_VPN</item>
+    <item>30,3,AUTO_REVOKE_PERMISSIONS_IF_UNUSED</item>
+    <item>30,0,AUTO_REVOKE_MANAGED_BY_INSTALLER</item>
+    <item>30,4,NO_ISOLATED_STORAGE</item>
   </string-array>
 </resources>

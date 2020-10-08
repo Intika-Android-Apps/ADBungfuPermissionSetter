@@ -1,0 +1,23 @@
+- android 11 new appOps
+
+- Action button now includes exp. features:
+
+    (trim in once all app/caches ,refresh, reset appops)
+    perform idle maintenance now
+    pm list libraries
+    pm list permission-groups
+    am stack list
+    $ adb shell ____ (w.i.p. interpretor: No safeguards)
+    List all ADB cmds (w.i.p. pro-active _Help: can cause bootloops)
+    List all whitelisted apps
+    profman ALL: extract all app's _profman to local android/data /com.oF2pks.adbungfu/files
+
+- latest chainfire/libsuperuser:1.1.0
+
+...
+
+Use ☢DARK/System apps to re-enabled frozen apps that won't show anymore in regular simplified screen after update.
+Included is [Active] tag (instead of appops time-in) for apps with stand-by status up. 
+
+LongPress to Setting/Apps
+
