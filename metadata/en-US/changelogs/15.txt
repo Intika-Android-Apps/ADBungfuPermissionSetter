@@ -1,0 +1,19 @@
+# move profman(s) to Documents/ADB_profman/
+
+# Selinux detection
+
+# android 11 new appOps
+   - PHONE_CALL_MICROPHONE
+   - PHONE_CALL_CAMERA
+   - RECORD_AUDIO_HOTWORD
+   - MANAGE_CREDENTIALS
+
+# latest chainfire/libsuperuser:1.1.0
+
+...
+
+Use ☢DARK/System apps to re-enabled frozen apps that won't show anymore in regular simplified screen after update.
+Included is [Active] tag (instead of appops time-in) for apps with stand-by status up. 
+
+LongPress to Setting/Apps
+

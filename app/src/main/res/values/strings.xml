@@ -3,9 +3,13 @@
     <string name="info_dialog_message">
         \nLongPress: android@Setting/Apps
         \n\nBlack texted labels: /System apps,
-        \n\nGray backgrounded: Inactive apps,\n\n
-        - Trim all app/caches via actions button.\n\n
-        - Lollipop SDK_20 Blind Mode ONLY.
+        \n\nGray backgrounded: Inactive apps,
+        \n\nVia actions button: \u238a
+        \n- Trim all app/caches
+        \n- profman(s).txt in Documents/ADB_profman/*
+        \n- Selinux detect
+        \n- ...
+        \n\n* Lollipop SDK_20 Blind Mode ONLY.
         \n\nprim-origin: https://github.com/MrBIMC/RunInBackgroundPermissionSetter
         \n\nGPLv3: https://bitbucket.org/oF2pks/adbungfupermissionsetter/commits/
     </string>

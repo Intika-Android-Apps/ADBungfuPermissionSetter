@@ -3,6 +3,7 @@ package com.oF2pks.adbungfu
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.os.Environment
 import eu.chainfire.libsuperuser.Shell
 import java.io.File
 import java.io.FileNotFoundException
@@ -169,7 +170,7 @@ fun suProfman(appsInfos: MutableList<ApplicationInfo>, ctx: Context, ad: Progres
                 shell.run("cmd package dump-profiles ${appsInfos[i].packageName}")
             }
         }
-        val dataDir = "${ctx.getExternalFilesDir(null)}/profman"
+        val dataDir = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)}/ADB_profman"
         shell.run("mkdir $dataDir")
         shell.run("mv -f /data/misc/profman/* $dataDir")
         return appsInfos.size

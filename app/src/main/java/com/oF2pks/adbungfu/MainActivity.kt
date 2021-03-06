@@ -334,7 +334,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 "pm list permission-groups",
                 "am stack list",
                 getString(R.string.s0),
-                getString(R.string.action_adb)
+                getString(R.string.action_adb),
+                "Selinux"
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) actions.add(getString(R.string.action_reset_all))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -353,7 +354,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
                 1 -> {
                     if (toBeSu()) Thread(Runnable{
-                        Snackbar.make(coordinator, suBool("pm trim-caches 999999G").get().toString(), Snackbar.LENGTH_LONG).show()
+                        Snackbar.make(coordinator, getString(R.string.action_wipe_all) + ": "
+                                + suBool("pm trim-caches 999999G").get().toString(), Snackbar.LENGTH_LONG).show()
                     }).start()
                     else noToBeSu()
                 }
@@ -464,6 +466,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
                 8 -> {
                     if (toBeSu()) Thread(Runnable{
+                        Snackbar.make(coordinator, "Selinux: " +  suString("getenforce").get(), Snackbar.LENGTH_LONG).show()
+                    }).start()
+                    else noToBeSu()
+                }
+                9 -> {
+                    if (toBeSu()) Thread(Runnable{
                         Snackbar.make(coordinator, suString("appops reset").get(), Snackbar.LENGTH_LONG).show()
                     }).start()
                     else noToBeSu()
@@ -472,7 +480,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                         loadApps(full)
                     }
                 }
-                9 -> {
+                10 -> {
                     val showText = TextView(this)
                     showText.text = suList(this@MainActivity, "cmd deviceidle whitelist").joinToString("\n").replace("system","")
                     showText.setTextIsSelectable(true)
@@ -483,7 +491,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                             .setNegativeButton(android.R.string.ok, null)
                             .show()
                 }
-                10 -> {
+                11 -> {
                     val alertDialog = ProgressDialog(this@MainActivity)
                     alertDialog.setTitle(getString(R.string.loading_dialog_title))
                     alertDialog.setIcon(R.drawable.clock_alert)

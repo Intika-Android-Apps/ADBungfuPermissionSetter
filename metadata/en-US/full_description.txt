@@ -6,7 +6,21 @@ Apps are grayed for empty uses & listed with time durations for active ones.
 
 You can use icon/Launcher shortcut or sort option to toggle +/- ☢DARK/System apps (use with extreme care!). Run it to re-enabled frozen apps.
 
-(I)nformation has a reset for all appOps, be aware: it will wipe all your previous aosp appOps settings. 
+- Action button now includes exp. features:
+
+    refresh
+    (trim in once all app/caches ,refresh, reset appops)
+    perform idle maintenance now
+    pm list libraries
+    pm list permission-groups
+    am stack list
+    $ adb shell ____ (w.i.p. interpretor: No safeguards)
+    List all ADB cmds (w.i.p. pro-active _Help: can cause bootloops)
+    Selinux detection
+    Reset for all appOps, be aware: it will wipe all your previous aosp appOps settings.
+    List all whitelisted apps
+    profman ALL: extract all app's _profman to local Documents/ADB_profman/*
+
 
 BackgroundRestrictor's fork/hack with all appOps not requiring aosp/sOpPerms i.e. the permission-less ones.
 
