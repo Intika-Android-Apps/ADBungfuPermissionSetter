@@ -23,6 +23,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.pm.ApplicationInfo
 import android.os.Build
+import android.os.Environment
 import android.text.InputType
 import com.google.android.material.snackbar.Snackbar
 import android.view.inputmethod.InputMethodManager
@@ -78,17 +79,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        output = File(this.getExternalFilesDir(null), (Build.VERSION.RELEASE + "-X-" + Build.VERSION.INCREMENTAL + ".txt").replace(" ".toRegex(), ""))
-
         masterJob = Job()
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
-
-        val fab = findViewById<FloatingActionButton>(R.id.fab)!!
-        fab.setOnClickListener { showActionsDialog() }
-
-        val spinner = findViewById<Spinner>(R.id.spinner)
-        toolbar.title = "_"
 
         mAlertDialog = ProgressDialog(this@MainActivity)
         if (toBeSu()) mAlertDialog!!.setTitle(getString(R.string.loading_dialog_title))
@@ -98,45 +89,61 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             noToBeSu()
         }
 
-        if (intent != null) {
-            if (intent.getStringExtra("extraID") != null)
-                appopstype = intent.getStringExtra("extraID")
-            else if (intent.action == Intent.ACTION_VIEW)
-                full =true
+        if (intent != null && intent.getStringExtra("extraID") != null && intent.getStringExtra("extraID").equals("adb_shell")) {
+            miniTerm(true)
+        } else {
+            setContentView(R.layout.activity_main)
+            setSupportActionBar(toolbar)
+            output = File("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)}"
+                    , ("ADB_err--help_" + Build.VERSION.RELEASE + "-X-" + Build.VERSION.INCREMENTAL + ".txt").replace(" ".toRegex(), ""))
 
-        }
+            val fab = findViewById<FloatingActionButton>(R.id.fab)!!
+            fab.setOnClickListener { showActionsDialog() }
 
-        recycler.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
-        recycler.layoutManager = LinearLayoutManager(this)
-        recycler.adapter = adapter
+            val spinner = findViewById<Spinner>(R.id.spinner)
+            toolbar.title = "_"
 
-        swipeRefreshLayout.setOnRefreshListener {refresh()}
+            if (intent != null) {
+                if (intent.getStringExtra("extraID") != null)
+                    appopstype = intent.getStringExtra("extraID")
+                else if (intent.action == Intent.ACTION_VIEW)
+                    full =true
 
-        if (spinner != null) {
-            val adapterSdkArray = ArrayAdapter(this, android.R.layout.simple_spinner_item, sdkArray())
-            adapterSdkArray.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinner.adapter = adapterSdkArray
+            }
 
-            spinner.setSelection(adapterSdkArray.getPosition(appopstype))
-            spinner.onItemSelectedListener = object :
-                    AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>,
-                                            view: View?, position: Int, id: Long) {
-                    Snackbar.make(coordinator,
-                            parent.getItemAtPosition(position).toString(), Snackbar.LENGTH_LONG).show()
-                    //Toast.makeText(this@MainActivity, "OnItemSelectedListener : " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show()
-                    appopstype = parent.getItemAtPosition(position).toString()
-                    toolbar.subtitle = fully(full) + "sdk" + Build.VERSION.SDK_INT.toString() + ":" + appopstype
-                    adapter.clear()
-                    loadApps(full)
-                }
+            recycler.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+            recycler.layoutManager = LinearLayoutManager(this)
+            recycler.adapter = adapter
 
-                override fun onNothingSelected(parent: AdapterView<*>) {
-                    // write code to perform some action
+            swipeRefreshLayout.setOnRefreshListener {refresh()}
+
+            if (spinner != null) {
+                val adapterSdkArray = ArrayAdapter(this, android.R.layout.simple_spinner_item, sdkArray())
+                adapterSdkArray.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spinner.adapter = adapterSdkArray
+
+                spinner.setSelection(adapterSdkArray.getPosition(appopstype))
+                spinner.onItemSelectedListener = object :
+                        AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(parent: AdapterView<*>,
+                                                view: View?, position: Int, id: Long) {
+                        Snackbar.make(coordinator,
+                                parent.getItemAtPosition(position).toString(), Snackbar.LENGTH_LONG).show()
+                        //Toast.makeText(this@MainActivity, "OnItemSelectedListener : " + parent.getItemAtPosition(position), Toast.LENGTH_SHORT).show()
+                        appopstype = parent.getItemAtPosition(position).toString()
+                        toolbar.subtitle = fully(full) + "sdk" + Build.VERSION.SDK_INT.toString() + ":" + appopstype
+                        adapter.clear()
+                        loadApps(full)
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>) {
+                        // write code to perform some action
+                    }
                 }
             }
+            //loadApps(full)
         }
-        //loadApps(full)
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -398,26 +405,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                             .show()
                 }
                 6 -> {
-                    val builder = AlertDialog.Builder(this , R.style.AppTheme)
-                    val cmdText = EditText(this)
-                    cmdText.hint = "be aware, NO SAFEGUARDS!"
-                    cmdText.inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-
-                    builder.setView(cmdText)
-                            .setTitle("zZz CAUTION ->" + getString(R.string.s0))
-                            .setNegativeButton(android.R.string.cancel, null)
-                            .setPositiveButton("eXe") {_ , _ ->
-                                val showText = TextView(this)
-                                showText.text = suList(this@MainActivity, cmdText.text.toString()).joinToString("\n")
-                                showText.setTextIsSelectable(true)
-                                builder.setView(showText)
-                                        .setTitle(R.string.button_open_information)
-                                        .setNegativeButton(android.R.string.ok, null)
-                                        .setPositiveButton(null,null)
-                                        .show()
-                            }
-                            .show()
-
+                    miniTerm(false)
                 }
                 7 -> {
                     val showText = TextView(this)
@@ -519,6 +507,35 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 .show()
 
     }
+
+    private fun miniTerm(boolean: Boolean) {
+        val builder = AlertDialog.Builder(this , R.style.AppTheme)
+        val cmdText = EditText(this)
+        cmdText.hint = "be aware, NO SAFEGUARDS!"
+        cmdText.inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+
+        builder.setView(cmdText)
+                .setTitle("zZz CAUTION ->" + getString(R.string.s0))
+                .setNegativeButton(android.R.string.cancel) {_ , _ ->
+                    if (boolean) finishAndRemoveTask()
+                }
+                .setPositiveButton("eXe") {_ , _ ->
+                    val showText = TextView(this)
+                    showText.text = suList(this@MainActivity, cmdText.text.toString()).joinToString("\n")
+                    showText.setTextIsSelectable(true)
+                    builder.setView(showText)
+                            .setTitle(R.string.button_open_information)
+                            .setNegativeButton(android.R.string.cancel) {_ , _ ->
+                                if (boolean) finishAndRemoveTask()
+                            }
+                            .setPositiveButton("2²°") {_ , _ ->
+                                miniTerm(boolean)
+                            }
+                            .show()
+                }
+                .show()
+    }
+
     /*fun ls():String {
         //@SuppressLint("PrivateApi")
         val execClass = Class.forName("android.os.Exec")
