@@ -1,19 +1,5 @@
 package com.oF2pks.adbungfu
 
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import androidx.recyclerview.widget.LinearLayoutManager
-
-import android.content.pm.PackageManager
-import android.content.Intent
-import android.text.Editable
-import android.text.TextWatcher
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.search_view.*
-import android.view.ViewAnimationUtils
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.Activity
@@ -21,35 +7,47 @@ import android.app.ProgressDialog
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
+import android.text.Editable
 import android.text.InputType
-import com.google.android.material.snackbar.Snackbar
+import android.text.TextWatcher
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewAnimationUtils
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import com.oF2pks.adbungfu.AppListAdapter.SortMethod
 import com.oF2pks.adbungfu.ExpandHmap.ExpandableListDetail
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.search_view.*
 import kotlinx.coroutines.*
-import java.io.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
+import java.io.File
 import kotlin.coroutines.CoroutineContext
 
 const val freezer = "1ive + stand-by"
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
-    private var output: File? =null
+    private var output: File? = null
     private var appopstype = freezer
     private var sigma = 0
     private var full = false
 
-    private var mAlertDialog: ProgressDialog? =null
-    private var mAlertText:String =""
+    private var mAlertDialog: ProgressDialog? = null
+    private var mAlertText: String = ""
     private var appsInfos: MutableList<ApplicationInfo> = ArrayList()
+    private var usm: UsageStatsManager? = null
 
     val adapter by lazy {
         AppListAdapter { (_, appName, _, appPackage, _, isEnabled) ->
@@ -80,10 +78,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         masterJob = Job()
+        usm = if (Build.VERSION.SDK_INT > 21) getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        else TODO("nothing")
 
         mAlertDialog = ProgressDialog(this@MainActivity)
-        if (toBeSu()) mAlertDialog!!.setTitle(getString(R.string.loading_dialog_title))
-        else {
+        if (toBeSu()) {
+            mAlertDialog!!.setTitle(getString(R.string.loading_dialog_title))
+        } else {
             mAlertDialog!!.setTitle(getString(R.string.app_no_su))
             Toast.makeText(this@MainActivity, "..." + getString(R.string.app_no_su).toUpperCase(), Toast.LENGTH_LONG).show()
             noToBeSu()
@@ -94,8 +95,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         } else {
             setContentView(R.layout.activity_main)
             setSupportActionBar(toolbar)
-            output = File("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)}"
-                    , ("ADB_err--help_" + Build.VERSION.RELEASE + "-X-" + Build.VERSION.INCREMENTAL + ".txt").replace(" ".toRegex(), ""))
+            output = File(this.getExternalFilesDir(null), (Build.VERSION.RELEASE + "-X-" + Build.VERSION.INCREMENTAL + ".txt").replace(" ".toRegex(), ""))
 
             val fab = findViewById<FloatingActionButton>(R.id.fab)!!
             fab.setOnClickListener { showActionsDialog() }
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 if (intent.getStringExtra("extraID") != null)
                     appopstype = intent.getStringExtra("extraID")
                 else if (intent.action == Intent.ACTION_VIEW)
-                    full =true
+                    full = true
 
             }
 
@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             recycler.layoutManager = LinearLayoutManager(this)
             recycler.adapter = adapter
 
-            swipeRefreshLayout.setOnRefreshListener {refresh()}
+            swipeRefreshLayout.setOnRefreshListener { refresh() }
 
             if (spinner != null) {
                 val adapterSdkArray = ArrayAdapter(this, android.R.layout.simple_spinner_item, sdkArray())
@@ -188,16 +188,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             if (boolean) {
                 appsInfos = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
             } else {
-                packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN, null).addCategory(Intent.CATEGORY_LAUNCHER)
-                            , PackageManager.GET_META_DATA)
+                packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN, null).addCategory(Intent.CATEGORY_LAUNCHER), PackageManager.GET_META_DATA)
                         .distinctBy { it.activityInfo.packageName }
                         .map { appsInfos.add(it.activityInfo.applicationInfo) }
             }
             mAlertText = appopstype + " " + appsInfos.size
-            runOnUiThread (changeTextAlert)
+            runOnUiThread(changeTextAlert)
             for (i in appsInfos.indices) {
-                if (i%15 == 0) {
-                    mAlertDialog!!.setMessage(appopstype + " " + appsInfos.size + "/"+i)
+                if (i % 15 == 0) {
+                    mAlertDialog!!.setMessage(appopstype + " " + appsInfos.size + "/" + i)
                     mAlertDialog!!.show()
                     /*mAlertText = appopstype + " " + appsInfos.size + "/"+i
                     runOnUiThread (changeTextAlert)*/
@@ -209,10 +208,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                         ztest = if (appsInfos[i].enabled) "allow"
                         else "deny"
                         if (Build.VERSION.SDK_INT >= 23) {
-                            val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-                            if (usm.isAppInactive(appsInfos[i].packageName)) fuel = ""
+                            if (usm!!.isAppInactive(appsInfos[i].packageName)) fuel = ""
                             else {
-                                fuel ="Active"
+                                fuel = "Active"
                                 sigma++
                             }
                         }
@@ -221,9 +219,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                             ztest = "no"
                             fuel = getString(R.string.message_blind)
                         } else {
-                            ztest = checkAppOpsPermission(appsInfos[i].packageName , appopstype).get()
+                            ztest = checkAppOpsPermission(appsInfos[i].packageName, appopstype).get()
                             if (ztest.contains("time")) {
-                                fuel = ztest.substring(ztest.indexOf("time")+5)
+                                fuel = ztest.substring(ztest.indexOf("time") + 5)
                                 sigma++
                             }
                         }
@@ -232,7 +230,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                             appsInfos[i].loadLabel(packageManager).toString(),
                             fuel,
                             appsInfos[i].packageName,
-                            appsInfos[i].flags and  ApplicationInfo.FLAG_SYSTEM != 0,
+                            appsInfos[i].flags and ApplicationInfo.FLAG_SYSTEM != 0,
                             testB(ztest))
                 }
 
@@ -251,7 +249,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private fun testB(string: String): Boolean {
-        return string.contains("allow") || string.contains("default")  ||
+        return string.contains("allow") || string.contains("default") ||
                 !(string.contains("ignore") || string.contains("deny"))
     }
 
@@ -269,14 +267,14 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         val inputManager = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
 
-        enterAnim.addListener(object: AnimatorListenerAdapter() {
+        enterAnim.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator?) {
                 searchBox.requestFocus()
                 inputManager.showSoftInput(searchBox, InputMethodManager.SHOW_IMPLICIT)
             }
         })
 
-        exitAnim.addListener(object: AnimatorListenerAdapter() {
+        exitAnim.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animator: Animator) {
                 searchOverlay.visibility = View.INVISIBLE
                 fab.visibility = View.VISIBLE
@@ -294,8 +292,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
 
         searchBox.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(p0: Editable?) { /*IGNORE*/ }
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { /*IGNORE*/ }
+            override fun afterTextChanged(p0: Editable?) { /*IGNORE*/
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) { /*IGNORE*/
+            }
 
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
                 adapter.filter(searchBox.text.toString().toLowerCase())
@@ -313,7 +314,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         val list = resources.getStringArray(R.array.permary)
         for (n in list.indices) {
-            if (list[n].substring(0,2).toInt() <= Build.VERSION.SDK_INT) {
+            if (list[n].substring(0, 2).toInt() <= Build.VERSION.SDK_INT) {
                 sdkarray.add(list[n].toString().substring(5))
             }
         }
@@ -353,146 +354,146 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         AlertDialog.Builder(this)
                 .setTitle("Select action")
                 .setCancelable(true)
-                .setNegativeButton(getString(R.string.button_close_dialog)) { dialog, _ -> dialog.cancel()}
+                .setNegativeButton(getString(R.string.button_close_dialog)) { dialog, _ -> dialog.cancel() }
                 .setItems(actions.toTypedArray()) { _, which ->
-            when (which) {
-                0 -> {
-                    refresh()
-                }
-                1 -> {
-                    if (toBeSu()) Thread(Runnable{
-                        Snackbar.make(coordinator, getString(R.string.action_wipe_all) + ": "
-                                + suBool("pm trim-caches 999999G").get().toString(), Snackbar.LENGTH_LONG).show()
-                    }).start()
-                    else noToBeSu()
-                }
-                2 -> {
-                    if (toBeSu()) Thread(Runnable{
-                        Snackbar.make(coordinator, suString("am idle-maintenance").get(), Snackbar.LENGTH_LONG).show()
-                    }).start()
-                    else noToBeSu()
-                }
-                3 -> {
-                    val showText = TextView(this)
-                    showText.text = suList(this@MainActivity, "pm list libraries").joinToString("\n").replace("library:","")
-                    showText.setTextIsSelectable(true)
-                    val builder = AlertDialog.Builder(this)
-                    builder.setView(showText)
-                            .setTitle(R.string.button_open_information)
-                            .setView(showText)
-                            .setNegativeButton(android.R.string.ok, null)
-                            .show()
-                }
-                4 -> {
-                    val showText = TextView(this)
-                    showText.text = suList(this@MainActivity, "pm list permission-groups").joinToString("\n").replace("permission group:android.permission-group","")
-                    showText.setTextIsSelectable(true)
-                    android.app.AlertDialog.Builder(this)
-                            .setTitle(R.string.button_open_information)
-                            .setView(showText)
-                            .setNegativeButton(android.R.string.ok, null)
-                            .show()
-                }
-                5 -> {
-                    val showText = TextView(this)
-                    showText.text = suList(this@MainActivity, "am stack list").joinToString("\n")
-                    showText.setTextIsSelectable(true)
-                    val builder = AlertDialog.Builder(this , R.style.AppTheme)
-                    builder.setView(showText)
-                            .setTitle(R.string.button_open_information)
-                            .setView(showText)
-                            .setNegativeButton(android.R.string.ok, null)
-                            .show()
-                }
-                6 -> {
-                    miniTerm(false)
-                }
-                7 -> {
-                    val showText = TextView(this)
-                    var zz: HashMap<String, List<String>>? = null
-                    var bHelper = true
-                    val cmdL = arrayListOf(" input   ", "toybox --help ","toybox   ","sqlite3 --help"," dpm   "," pm   "," am   "," zip -h","ls /system/bin","logcat --help")//"ls /system/bin","dexdump -h","/system/bin/sh -dexdump",
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        suList(this@MainActivity, "cmd -l").map {
-                            cmdL.add("cmd $it ")
+                    when (which) {
+                        0 -> {
+                            refresh()
                         }
-                    } else if (toBeSu()) cmdL.addAll(arrayListOf(
-                            " activity ",
-                            " appops ",
-                            " battery ",
-                            " deviceidle ",
-                            //" input ",
-                            " jobscheduler ",
-                            " netpolicy ",
-                            " package ",
-                            " shortcut ",
-                            " statusbar ",
-                            " user ",
-                            " webviewupdate "))
+                        1 -> {
+                            if (toBeSu()) Thread(Runnable {
+                                Snackbar.make(coordinator, getString(R.string.action_wipe_all) + ": "
+                                        + suBool("pm trim-caches 999999G").get().toString(), Snackbar.LENGTH_LONG).show()
+                            }).start()
+                            else noToBeSu()
+                        }
+                        2 -> {
+                            if (toBeSu()) Thread(Runnable {
+                                Snackbar.make(coordinator, suString("am idle-maintenance").get(), Snackbar.LENGTH_LONG).show()
+                            }).start()
+                            else noToBeSu()
+                        }
+                        3 -> {
+                            val showText = TextView(this)
+                            showText.text = suList(this@MainActivity, "pm list libraries").joinToString("\n").replace("library:", "")
+                            showText.setTextIsSelectable(true)
+                            val builder = AlertDialog.Builder(this)
+                            builder.setView(showText)
+                                    .setTitle(R.string.button_open_information)
+                                    .setView(showText)
+                                    .setNegativeButton(android.R.string.ok, null)
+                                    .show()
+                        }
+                        4 -> {
+                            val showText = TextView(this)
+                            showText.text = suList(this@MainActivity, "pm list permission-groups").joinToString("\n").replace("permission group:android.permission-group", "")
+                            showText.setTextIsSelectable(true)
+                            android.app.AlertDialog.Builder(this)
+                                    .setTitle(R.string.button_open_information)
+                                    .setView(showText)
+                                    .setNegativeButton(android.R.string.ok, null)
+                                    .show()
+                        }
+                        5 -> {
+                            val showText = TextView(this)
+                            showText.text = suList(this@MainActivity, "am stack list").joinToString("\n")
+                            showText.setTextIsSelectable(true)
+                            val builder = AlertDialog.Builder(this, R.style.AppTheme)
+                            builder.setView(showText)
+                                    .setTitle(R.string.button_open_information)
+                                    .setView(showText)
+                                    .setNegativeButton(android.R.string.ok, null)
+                                    .show()
+                        }
+                        6 -> {
+                            miniTerm(false)
+                        }
+                        7 -> {
+                            val showText = TextView(this)
+                            var zz: HashMap<String, List<String>>? = null
+                            var bHelper = true
+                            val cmdL = arrayListOf(" input   ", "toybox --help ", "toybox   ", "sqlite3 --help", " dpm   ", " pm   ", " am   ", " zip -h", "ls /system/bin", "logcat --help")//"ls /system/bin","dexdump -h","/system/bin/sh -dexdump",
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                suList(this@MainActivity, "cmd -l").map {
+                                    cmdL.add("cmd $it ")
+                                }
+                            } else if (toBeSu()) cmdL.addAll(arrayListOf(
+                                    " activity ",
+                                    " appops ",
+                                    " battery ",
+                                    " deviceidle ",
+                                    //" input ",
+                                    " jobscheduler ",
+                                    " netpolicy ",
+                                    " package ",
+                                    " shortcut ",
+                                    " statusbar ",
+                                    " user ",
+                                    " webviewupdate "))
 
-                    Thread(Runnable{
-                        zz = suADB(this@MainActivity, cmdL, output!!)
-                        if (bHelper) startActivity(Intent(this, ExpandableListDetail::class.java)
-                                .putExtra("HMAP",zz))
-                    }).start()
-                    showText.text = cmdL.joinToString("\n")
-                    showText.setTextIsSelectable(true)
-                    val builder = AlertDialog.Builder(this)
-                    builder.setView(showText)
-                            .setTitle(R.string.button_open_information)
-                            .setView(showText)
-                            .setCancelable(true)
-                            .setNegativeButton(android.R.string.ok) {_ , _ ->
-                                bHelper = false
+                            Thread(Runnable {
+                                zz = suADB(this@MainActivity, cmdL, output!!)
+                                if (bHelper) startActivity(Intent(this, ExpandableListDetail::class.java)
+                                        .putExtra("HMAP", zz))
+                            }).start()
+                            showText.text = cmdL.joinToString("\n")
+                            showText.setTextIsSelectable(true)
+                            val builder = AlertDialog.Builder(this)
+                            builder.setView(showText)
+                                    .setTitle(R.string.button_open_information)
+                                    .setView(showText)
+                                    .setCancelable(true)
+                                    .setNegativeButton(android.R.string.ok) { _, _ ->
+                                        bHelper = false
+                                    }
+                                    .setPositiveButton("2²°") { _, _ ->
+                                        bHelper = true
+                                        if (zz != null) startActivity(Intent(this, ExpandableListDetail::class.java)
+                                                .putExtra("HMAP", zz))
+                                    }
+                                    .show()
+                        }
+                        8 -> {
+                            if (toBeSu()) Thread(Runnable {
+                                Snackbar.make(coordinator, "Selinux: " + suString("getenforce").get(), Snackbar.LENGTH_LONG).show()
+                            }).start()
+                            else noToBeSu()
+                        }
+                        9 -> {
+                            if (toBeSu()) Thread(Runnable {
+                                Snackbar.make(coordinator, suString("appops reset").get(), Snackbar.LENGTH_LONG).show()
+                            }).start()
+                            else noToBeSu()
+                            if (appopstype != freezer) {
+                                adapter.clear()
+                                loadApps(full)
                             }
-                            .setPositiveButton("2²°") {_ , _ ->
-                                bHelper = true
-                                if (zz != null) startActivity(Intent(this, ExpandableListDetail::class.java)
-                                        .putExtra("HMAP",zz))
-                            }
-                            .show()
-                }
-                8 -> {
-                    if (toBeSu()) Thread(Runnable{
-                        Snackbar.make(coordinator, "Selinux: " +  suString("getenforce").get(), Snackbar.LENGTH_LONG).show()
-                    }).start()
-                    else noToBeSu()
-                }
-                9 -> {
-                    if (toBeSu()) Thread(Runnable{
-                        Snackbar.make(coordinator, suString("appops reset").get(), Snackbar.LENGTH_LONG).show()
-                    }).start()
-                    else noToBeSu()
-                    if (appopstype != freezer) {
-                        adapter.clear()
-                        loadApps(full)
+                        }
+                        10 -> {
+                            val showText = TextView(this)
+                            showText.text = suList(this@MainActivity, "cmd deviceidle whitelist").joinToString("\n").replace("system", "")
+                            showText.setTextIsSelectable(true)
+                            val builder = AlertDialog.Builder(this, R.style.AppTheme)
+                            builder.setView(showText)
+                                    .setTitle(R.string.button_open_information)
+                                    .setView(showText)
+                                    .setNegativeButton(android.R.string.ok, null)
+                                    .show()
+                        }
+                        11 -> {
+                            val alertDialog = ProgressDialog(this@MainActivity)
+                            alertDialog.setTitle(getString(R.string.loading_dialog_title))
+                            alertDialog.setIcon(R.drawable.clock_alert)
+                            alertDialog.setMessage("PROFMAN")
+                            alertDialog.show()
+
+                            Thread(Runnable {
+                                Snackbar.make(coordinator, "PROFMAN:" + suProfman(appsInfos, this, alertDialog), Snackbar.LENGTH_LONG).show()
+                                alertDialog.dismiss()
+                            }).start()
+                        }
                     }
-                }
-                10 -> {
-                    val showText = TextView(this)
-                    showText.text = suList(this@MainActivity, "cmd deviceidle whitelist").joinToString("\n").replace("system","")
-                    showText.setTextIsSelectable(true)
-                    val builder = AlertDialog.Builder(this , R.style.AppTheme)
-                    builder.setView(showText)
-                            .setTitle(R.string.button_open_information)
-                            .setView(showText)
-                            .setNegativeButton(android.R.string.ok, null)
-                            .show()
-                }
-                11 -> {
-                    val alertDialog = ProgressDialog(this@MainActivity)
-                    alertDialog.setTitle(getString(R.string.loading_dialog_title))
-                    alertDialog.setIcon(R.drawable.clock_alert)
-                    alertDialog.setMessage("PROFMAN")
-                    alertDialog.show()
-
-                    Thread(Runnable{
-                        Snackbar.make(coordinator, "PROFMAN:" +suProfman(appsInfos, this, alertDialog), Snackbar.LENGTH_LONG).show()
-                        alertDialog.dismiss()
-                    }).start()
-                }
-            }
-        }.show()
+                }.show()
                 .getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(resources.getColor(R.color.primary))
     }
 
@@ -509,26 +510,26 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private fun miniTerm(boolean: Boolean) {
-        val builder = AlertDialog.Builder(this , R.style.AppTheme)
+        val builder = AlertDialog.Builder(this, R.style.AppTheme)
         val cmdText = EditText(this)
         cmdText.hint = "be aware, NO SAFEGUARDS!"
         cmdText.inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
 
         builder.setView(cmdText)
                 .setTitle("zZz CAUTION ->" + getString(R.string.s0))
-                .setNegativeButton(android.R.string.cancel) {_ , _ ->
+                .setNegativeButton(android.R.string.cancel) { _, _ ->
                     if (boolean) finishAndRemoveTask()
                 }
-                .setPositiveButton("eXe") {_ , _ ->
+                .setPositiveButton("eXe") { _, _ ->
                     val showText = TextView(this)
                     showText.text = suList(this@MainActivity, cmdText.text.toString()).joinToString("\n")
                     showText.setTextIsSelectable(true)
                     builder.setView(showText)
                             .setTitle(R.string.button_open_information)
-                            .setNegativeButton(android.R.string.cancel) {_ , _ ->
+                            .setNegativeButton(android.R.string.cancel) { _, _ ->
                                 if (boolean) finishAndRemoveTask()
                             }
-                            .setPositiveButton("2²°") {_ , _ ->
+                            .setPositiveButton("2²°") { _, _ ->
                                 miniTerm(boolean)
                             }
                             .show()
